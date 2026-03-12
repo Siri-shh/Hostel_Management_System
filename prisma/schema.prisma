@@ -1,0 +1,172 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum AllotmentStatus {
+  ALLOTTED
+  WAITLISTED
+  OFF_CAMPUS
+}
+
+enum SessionStatus {
+  DRAFT
+  ROUND1_DONE
+  ROUND2_DONE
+}
+
+model Block {
+  id            Int      @id @default(autoincrement())
+  number        Int      @unique
+  gender        Gender
+  floors        Int      @default(8)
+  roomsPerFloor Int      @default(30)
+
+  rooms         Room[]
+  roomConfigs   BlockRoomConfig[]
+  pref1Groups   StudentGroup[]     @relation("Pref1Block")
+  pref2Groups   StudentGroup[]     @relation("Pref2Block")
+
+  @@map("blocks")
+}
+
+model RoomType {
+  id       Int    @id @default(autoincrement())
+  code     String @unique
+  name     String
+  capacity Int
+
+  rooms       Room[]
+  roomConfigs BlockRoomConfig[]
+  pref1Groups StudentGroup[]     @relation("Pref1RoomType")
+  pref2Groups StudentGroup[]     @relation("Pref2RoomType")
+
+  @@map("room_types")
+}
+
+model BlockRoomConfig {
+  id            Int      @id @default(autoincrement())
+  blockId       Int
+  roomTypeId    Int
+  roomsPerFloor Int
+
+  block    Block    @relation(fields: [blockId], references: [id])
+  roomType RoomType @relation(fields: [roomTypeId], references: [id])
+
+  @@unique([blockId, roomTypeId])
+  @@map("block_room_configs")
+}
+
+model Room {
+  id           Int    @id @default(autoincrement())
+  blockId      Int
+  roomTypeId   Int
+  floor        Int
+  roomNumber   String
+  occupiedBeds Int    @default(0)
+
+  block      Block       @relation(fields: [blockId], references: [id])
+  roomType   RoomType    @relation(fields: [roomTypeId], references: [id])
+  allotments Allotment[]
+
+  @@unique([blockId, roomNumber])
+  @@map("rooms")
+}
+
+model AllotmentSession {
+  id        Int           @id @default(autoincrement())
+  name      String
+  status    SessionStatus @default(DRAFT)
+  createdAt DateTime      @default(now())
+
+  students  Student[]
+  groups    StudentGroup[]
+  allotments Allotment[]
+
+  @@map("allotment_sessions")
+}
+
+model Student {
+  id         Int    @id @default(autoincrement())
+  regNo      String
+  name       String
+  gender     Gender
+  year       Int
+  department String
+  cgpa       Float
+  sessionId  Int
+
+  // Store raw preferences from CSV so allotment can work even without groups
+  pref1BlockNum     Int?
+  pref1RoomTypeCode String?
+  pref2BlockNum     Int?
+  pref2RoomTypeCode String?
+
+  session    AllotmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  groupMemberships GroupMember[]
+  allotments       Allotment[]
+
+  @@unique([regNo, sessionId])
+  @@map("students")
+}
+
+model StudentGroup {
+  id             Int    @id @default(autoincrement())
+  avgCgpa        Float
+  size           Int
+  pref1BlockId   Int
+  pref1RoomTypeId Int
+  pref2BlockId   Int
+  pref2RoomTypeId Int
+  sessionId      Int
+
+  pref1Block    Block            @relation("Pref1Block", fields: [pref1BlockId], references: [id])
+  pref1RoomType RoomType         @relation("Pref1RoomType", fields: [pref1RoomTypeId], references: [id])
+  pref2Block    Block            @relation("Pref2Block", fields: [pref2BlockId], references: [id])
+  pref2RoomType RoomType         @relation("Pref2RoomType", fields: [pref2RoomTypeId], references: [id])
+  session       AllotmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  members    GroupMember[]
+  allotments Allotment[]
+
+  @@map("student_groups")
+}
+
+model GroupMember {
+  id        Int @id @default(autoincrement())
+  groupId   Int
+  studentId Int
+
+  group   StudentGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  student Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, studentId])
+  @@map("group_members")
+}
+
+model Allotment {
+  id        Int             @id @default(autoincrement())
+  studentId Int
+  roomId    Int?
+  groupId   Int
+  round     Int
+  status    AllotmentStatus
+  sessionId Int
+
+  student Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  room    Room?            @relation(fields: [roomId], references: [id])
+  group   StudentGroup     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  session AllotmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, sessionId, round])
+  @@map("allotments")
+}

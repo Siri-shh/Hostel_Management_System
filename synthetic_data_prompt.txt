@@ -1,0 +1,167 @@
+Generate a CSV file with exactly 5000 rows of synthetic student data for a college hostel allotment system. The output must be a valid CSV with these exact column headers:
+
+reg_no,name,gender,year,department,cgpa,roommate_1,roommate_2,pref1_block,pref1_room_type,pref2_block,pref2_room_type
+
+
+STUDENT DEMOGRAPHICS
+--------------------
+
+- Total students: 5000
+- Gender split: 60% Male (3000), 40% Female (2000)
+- Year distribution: 75% Year 2, 25% Year 3. No Year 4 students.
+- Department: Use any realistic department abbreviation (CSE, ECE, ME, EE, IT, CCE, CE, BT, AE, CHE, etc.). This field is cosmetic, just make it varied.
+- CGPA: Realistic bell curve distribution. Mean around 7.5, standard deviation around 1.2. Clamp between 2.0 and 10.0. Round to 2 decimal places. Very few students below 4.0 or above 9.8.
+
+
+REGISTRATION NUMBER FORMAT
+---------------------------
+
+Format: YYCCRRDDD where:
+- YY = admission year: 24 for Year 2, 23 for Year 3
+- CC = campus code: always 09
+- RR = department code: use 01 to 15 (mapped to department)
+- DDD = serial number: 001 to 999
+
+Each reg_no must be unique across the entire dataset. Example: 240901001, 230905042.
+
+
+NAMES
+-----
+
+Generate realistic Indian first + last names. Mix male and female names appropriately based on the gender field.
+
+
+GROUP COMPOSITION
+-----------------
+
+Students apply either solo (no roommates) or with roommates (pairs or triples).
+
+- 35% solo (around 1750 students): roommate_1 and roommate_2 are both empty
+- 62% in pairs (around 3100 students = 1550 pairs): roommate_1 filled, roommate_2 empty
+- 3% in triples (around 150 students = 50 triples): roommate_1 and roommate_2 both filled
+
+CRITICAL ROOMMATE RULES (the system will reject invalid data):
+
+1. All members of a group must be present in the CSV.
+2. Roommate references must be mutual. If A lists B as roommate_1, then B must list A as roommate_1.
+3. For a triple (A, B, C): A lists B and C. B lists A and C. C lists A and B. The order of roommate_1 and roommate_2 does not matter as long as all three reference each other.
+4. All members of a group must be the same gender.
+5. All members of a group must have identical pref1_block, pref1_room_type, pref2_block, and pref2_room_type values.
+6. Group size must not exceed the room capacity of their chosen room types. A pair cannot choose a Single room (capacity 1). A triple can only choose QAC (capacity 4).
+
+
+BLOCK AND ROOM TYPE CONFIGURATION
+------------------------------------
+
+Boys Blocks (gender = M):
+
+Block 10: Available room types are DC, SAC, SC
+Block 14: Available room types are DAC, SAC
+Block 15: Available room types are DAC, SAC
+Block 18: Available room types are SA, SAC
+Block 19: Available room types are SA, SAC
+Block 20: Available room types are SA, SAC
+Block 23: Available room types are DAC, QAC, SAC
+
+Girls Blocks (gender = F):
+
+Block 8:  Available room types are DA, DAC
+Block 13: Available room types are DA, DAC, SA, SAC
+Block 21: Available room types are SA, SAC
+Block 22: Available room types are DAC
+
+Room Type Capacities:
+
+SA  = capacity 1 (single, attached washroom, non-AC)
+SAC = capacity 1 (single, attached washroom, AC)
+SC  = capacity 1 (single, non-attached washroom, non-AC)
+DA  = capacity 2 (double, attached washroom, non-AC)
+DAC = capacity 2 (double, attached washroom, AC)
+DC  = capacity 2 (double, non-attached washroom, non-AC)
+QAC = capacity 4 (quadruple, attached washroom, AC)
+
+
+PREFERENCE RULES (ABSOLUTELY NO VIOLATIONS ALLOWED)
+-----------------------------------------------------
+
+Each student has two preferences. Each preference = one Block number + one Room Type code.
+
+1. Gender match: Boys (M) can ONLY choose from boys blocks (10, 14, 15, 18, 19, 20, 23). Girls (F) can ONLY choose from girls blocks (8, 13, 21, 22).
+
+2. Room type availability: The chosen room type MUST be listed as available for that block. For example, Block 18 only has SA and SAC. A student cannot choose DAC for Block 18.
+
+3. Capacity constraint: Group size must not exceed room capacity:
+   - Solo students can choose any room type.
+   - Pairs can only choose DA, DAC, DC, or QAC (capacity 2 or 4).
+   - Triples can only choose QAC (capacity 4), which is only in Block 23, so triples must be boys.
+
+4. Pref 1 and Pref 2 should ideally be different from each other (different block or different room type or both).
+
+
+PREFERENCE POPULARITY DISTRIBUTION
+------------------------------------
+
+Boys block popularity (approximate weight distribution for Pref 1):
+- Block 14: around 30% (highly popular)
+- Block 15: around 25% (highly popular)
+- Block 18: around 12%
+- Block 19: around 10%
+- Block 20: around 10%
+- Block 10: around 10%
+- Block 23: around 3% (unpopular)
+
+For Pref 2, use a slightly more spread-out distribution since students pick something different as a backup.
+
+Girls block popularity (approximate weight distribution for Pref 1):
+- Block 22: around 35% (highly popular)
+- Block 13: around 30% (highly popular)
+- Block 21: around 20%
+- Block 8: around 15%
+
+Room type preference:
+- Around 30% of students apply for single rooms (SA, SAC, SC with capacity 1). Among these, strongly prefer SAC (AC + attached) over SA or SC.
+- Around 65% of students apply for double rooms (DA, DAC, DC with capacity 2). Among these, strongly prefer DAC (AC + attached) over DA or DC.
+- Around 5% apply for QAC (quadruple), only available in Block 23 for boys only.
+
+When multiple room types are available in a block, AC and attached versions should be chosen 70-80% of the time over non-AC or non-attached alternatives.
+
+
+EDGE CASES TO INCLUDE
+-----------------------
+
+Sprinkle these in to make the data realistic and test edge cases:
+- Around 50 triple groups (150 students) all applying for Block 23 QAC (the only valid combo for triples)
+- A few students with very low CGPA (2.0 to 3.5) who will likely end up waitlisted or off-campus
+- A few students with perfect 10.0 CGPA
+- Heavy oversubscription of Block 14 DAC to stress-test the waitlisting system
+- Some solo students choosing double room types like DAC or DA (this is valid, the system pairs them automatically)
+- Some pairs where both members have very high CGPAs (9.5 and above)
+- At least a few solo girls choosing Block 22 DAC (valid, they get auto-paired)
+
+
+OUTPUT FORMAT
+--------------
+
+- Pure CSV text, comma-separated, no quotes unless the field contains a comma
+- Empty roommate fields should just be empty (two consecutive commas), for example: 240901003,Vikram Singh,M,2,ECE,8.50,,,14,SAC,18,SA
+- No trailing whitespace or blank rows
+- The file should be exactly 5001 lines (1 header + 5000 data rows)
+- Do not include any explanation or text outside the CSV
+
+
+SAMPLE ROWS FOR REFERENCE
+---------------------------
+
+reg_no,name,gender,year,department,cgpa,roommate_1,roommate_2,pref1_block,pref1_room_type,pref2_block,pref2_room_type
+240901001,Rahul Sharma,M,2,CSE,8.75,240901002,,14,DAC,15,SAC
+240901002,Aman Gupta,M,2,CSE,8.30,240901001,,14,DAC,15,SAC
+240903005,Vikram Singh,M,2,ECE,7.92,,,18,SAC,14,SAC
+230905010,Priya Nair,F,3,IT,9.10,230905011,,22,DAC,13,DAC
+230905011,Kavya Iyer,F,3,IT,8.85,230905010,,22,DAC,13,DAC
+240907020,Sid Patel,M,2,ME,8.70,240907021,240907022,23,QAC,23,DAC
+240907021,Nikhil Verma,M,2,ME,8.30,240907020,240907022,23,QAC,23,DAC
+240907022,Pranav Das,M,2,ME,8.90,240907020,240907021,23,QAC,23,DAC
+240902015,Ananya Reddy,F,2,ECE,7.40,,,13,SAC,21,SA
+230901030,Rohan Mehta,M,3,CSE,6.20,,,10,DC,20,SA
+
+Note: In the pair example, both 240901001 and 240901002 list each other as roommate_1, and their preferences are identical. In the triple example, all three list the other two and share the same preferences.
