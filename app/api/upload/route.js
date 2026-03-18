@@ -100,13 +100,15 @@ export async function POST(request) {
             });
 
             for (const member of group.members) {
-                const dbStudent = studentByReg[member.regNo];
-
+                // IMPORTANT: Cast to String in case CSV parser returned a number type
+                const dbStudent = studentByReg[String(member.regNo)];
                 if (dbStudent) {
                     allGroupMemberData.push({
                         groupId: studentGroup.id,
                         studentId: dbStudent.id,
                     });
+                } else {
+                    console.error(`[Upload] CRITICAL: No DB student found for regNo "${member.regNo}" (type: ${typeof member.regNo})`);
                 }
             }
             groupCount++;
@@ -131,6 +133,7 @@ export async function POST(request) {
             sessionName: session.name,
             studentCount: studentDataList.length,
             groupCount,
+            memberCount: allGroupMemberData.length,
             groupSkipped,
             warning: groupSkipped > 0 ? `${groupSkipped} groups could not be created due to block/room type lookup failures. Check server logs.` : undefined,
         });

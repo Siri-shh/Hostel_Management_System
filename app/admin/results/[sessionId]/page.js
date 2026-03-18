@@ -123,7 +123,6 @@ export default function ResultsPage({ params }) {
                     <h1>Allotment Results</h1>
                     <p>Session #{params.sessionId} — {stats.session?.name || ''}</p>
                 </div>
-                <button className="btn btn-outline" onClick={downloadCSV}>📥 Export All CSV</button>
             </div>
 
             {/* Overview Stats */}
@@ -156,7 +155,7 @@ export default function ResultsPage({ params }) {
 
             {/* Tabs */}
             <div className="tab-bar">
-                {['overview', 'blocks', 'allotted', 'waitlisted', 'off-campus'].map(tab => (
+                {['overview', 'blocks', 'allotted', 'waitlisted', 'off-campus', 'exports'].map(tab => (
                     <button
                         key={tab}
                         className={`tab ${activeTab === tab ? 'active' : ''}`}
@@ -166,7 +165,8 @@ export default function ResultsPage({ params }) {
                             tab === 'blocks' ? '🏢 Block-wise' :
                                 tab === 'allotted' ? `✅ Allotted (${stats.allotted})` :
                                     tab === 'waitlisted' ? `⏳ Waitlisted (${stats.waitlisted})` :
-                                        `🚫 Off-Campus (${stats.offCampus})`}
+                                        tab === 'exports' ? '📥 Exports & Reports' :
+                                            `🚫 Off-Campus (${stats.offCampus})`}
                     </button>
                 ))}
             </div>
@@ -524,6 +524,34 @@ export default function ResultsPage({ params }) {
                             </table>
                         </div>
                     )}
+                </div>
+            )}
+            {/* ================== EXPORTS TAB ================== */}
+            {activeTab === 'exports' && (
+                <div className="animate-in">
+                    <div className="card">
+                        <div className="card-header"><span className="card-title">📥 Download Comprehensive CSV Reports</span></div>
+                        <div style={{ padding: '20px', color: 'var(--text-muted)', fontSize: '14px', borderBottom: '1px solid var(--border-light)' }}>
+                            Clicking any button below will instantly generate and download a custom CSV file directly from the database matching the selected criteria. 
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', padding: '24px' }}>
+                            <a href={`/api/export/${params.sessionId}?type=all`} className="btn btn-outline" style={{ justifyContent: 'flex-start', padding: '16px', fontSize: '15px' }}>
+                                📄 Master Allotment List (All {stats.allotted} placed)
+                            </a>
+                            <a href={`/api/export/${params.sessionId}?type=round1`} className="btn btn-outline" style={{ justifyContent: 'flex-start', padding: '16px', fontSize: '15px' }}>
+                                🎯 Round 1 Results (Preference Matches)
+                            </a>
+                            <a href={`/api/export/${params.sessionId}?type=round2`} className="btn btn-outline" style={{ justifyContent: 'flex-start', padding: '16px', fontSize: '15px' }}>
+                                🔄 Round 2 Results (Random Vacancy Fills)
+                            </a>
+                            <a href={`/api/export/${params.sessionId}?type=pref1`} className="btn btn-outline" style={{ justifyContent: 'flex-start', padding: '16px', fontSize: '15px' }}>
+                                ⭐ Got First Preference (100% Match)
+                            </a>
+                            <a href={`/api/export/${params.sessionId}?type=unplaced`} className="btn btn-outline" style={{ justifyContent: 'flex-start', padding: '16px', fontSize: '15px' }}>
+                                🚫 Unplaced / Off-Campus Students ({stats.waitlisted + stats.offCampus})
+                            </a>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

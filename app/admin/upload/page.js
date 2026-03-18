@@ -202,13 +202,26 @@ export default function UploadPage() {
 
             {/* Upload Result */}
             {uploadResult && (
-                <div className="success-message" style={{ marginTop: '16px' }}>
-                    ✅ Successfully imported! Session "{uploadResult.sessionName}" created with {uploadResult.studentCount} students and {uploadResult.groupCount} groups.
-                    <div style={{ marginTop: '12px' }}>
-                        <a href="/admin/allotment" className="btn btn-success btn-sm">
-                            ⚡ Go to Allotment
-                        </a>
-                    </div>
+                <div className={uploadResult.warning ? "error-list" : "success-message"} style={{ marginTop: '16px' }}>
+                    {uploadResult.warning ? '⚠️' : '✅'} Import complete — Session &ldquo;{uploadResult.sessionName}&rdquo; created.
+                    <ul style={{ marginTop: '10px', paddingLeft: '16px', fontSize: '0.9rem' }}>
+                        <li>👤 <strong>{uploadResult.studentCount}</strong> students uploaded</li>
+                        <li>👥 <strong>{uploadResult.groupCount}</strong> groups created</li>
+                        <li>🔗 <strong>{uploadResult.memberCount ?? '?'}</strong> group member links created</li>
+                        {uploadResult.groupSkipped > 0 && (
+                            <li style={{ color: 'var(--error)' }}>⚠️ {uploadResult.groupSkipped} groups skipped (bad block/room-type in CSV)</li>
+                        )}
+                        {uploadResult.warning && (
+                            <li style={{ color: 'var(--error)' }}>⚠️ {uploadResult.warning}</li>
+                        )}
+                    </ul>
+                    {!uploadResult.warning && (
+                        <div style={{ marginTop: '12px' }}>
+                            <a href="/admin/allotment" className="btn btn-success btn-sm">
+                                ⚡ Go to Allotment
+                            </a>
+                        </div>
+                    )}
                 </div>
             )}
 

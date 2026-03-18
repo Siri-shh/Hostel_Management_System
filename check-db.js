@@ -2,42 +2,51 @@ const { PrismaClient } = require('@prisma/client');
 const p = new PrismaClient();
 
 (async () => {
-    // Find all groups in the latest session
-    const latestSession = await p.allotmentSession.findFirst({ orderBy: { id: 'desc' } });
-    if (!latestSession) {
-        console.log("No sessions found.");
-        return;
-    }
+    const session = await p.allotmentSession.findFirst({ orderBy: { id: 'desc' } });
+    if (!session) return;
 
-    console.log(`Checking groups in Session ${latestSession.id}...`);
+    for (const targetBlock of [14, 15]) {
+        console.log(`\n========================================`);
+        console.log(`ANALYSIS FOR BLOCK ${targetBlock}`);
+        console.log(`========================================`);
 
-    const groups = await p.studentGroup.findMany({
-        where: { sessionId: latestSession.id },
-        include: {
-            members: { include: { student: true } }
+        const allotments = await p.allotment.findMany({
+            where: {
+                sessionId: session.id,
+                status: 'ALLOTTED',
+                room: { block: { number: targetBlock } }
+            },
+            include: {
+                student: true,
+                group: true,
+                room: { include: { roomType: true } }
+            },
+            orderBy: { student: { cgpa: 'asc' } }
+        });
+
+        if (allotments.length === 0) {
+            console.log('No allotments found.');
+            continue;
         }
-    });
 
-    let emptyGroups = 0;
-    let missingStudents = 0;
+        const total = allotments.length;
+        const avg = allotments.reduce((sum, a) => sum + a.student.cgpa, 0) / total;
+        
+        console.log(`Total students placed: ${total}`);
+        console.log(`Block Average CGPA: ${avg.toFixed(2)}`);
+        
+        console.log(`\n--- THE "CUTOFF" (Bottom 15 students) ---`);
+        const bottom = allotments.slice(0, 15);
+        for (const a of bottom) {
+            console.log(`  CGPA: ${a.student.cgpa.toFixed(2)} | Group Size: ${a.group.size} | Room Type: ${a.room.roomType.code} | Round: ${a.round} | Status: ${a.round===1 ? 'Preference' : 'Random Vacancy Fill'}`);
+        }
 
-    for (const g of groups) {
-        if (!g.members || g.members.length === 0) {
-            console.log(`Group ID ${g.id} has NO members!`);
-            emptyGroups++;
-        } else {
-            for (const m of g.members) {
-                if (!m.student) {
-                    console.log(`Group ID ${g.id}, Member ID ${m.id} has NO internal student mapped!`);
-                    missingStudents++;
-                }
-            }
+        console.log(`\n--- Top 5 students for comparison ---`);
+        const top = allotments.slice(-5).reverse();
+        for (const a of top) {
+            console.log(`  CGPA: ${a.student.cgpa.toFixed(2)} | Group Size: ${a.group.size} | Room Type: ${a.room.roomType.code} | Round: ${a.round}`);
         }
     }
-
-    console.log(`\nTotal groups: ${groups.length}`);
-    console.log(`Empty groups (length 0): ${emptyGroups}`);
-    console.log(`Members with missing student relation: ${missingStudents}`);
-
+    
     await p.$disconnect();
 })();
