@@ -16,6 +16,13 @@ export default function AllotmentPage() {
     const [verifyLoading, setVerifyLoading] = useState(false);
     const [disallowing, setDisallowing] = useState(null); // allotment ID being disallowed
 
+    // Filter & Sort State
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterBlock, setFilterBlock] = useState('ALL');
+    const [filterPlacedBy, setFilterPlacedBy] = useState('ALL');
+    const [filterRoomType, setFilterRoomType] = useState('ALL');
+    const [sortBy, setSortBy] = useState('block-room');
+
     useEffect(() => { fetchSessions(); }, []);
 
     async function fetchSessions() {
@@ -165,12 +172,57 @@ export default function AllotmentPage() {
         return <span className={`badge ${map[status] || 'badge-info'}`}>{status.replace(/_/g, ' ')}</span>;
     };
 
-    // Group allotments by groupId for display
-    const groupedAllotments = r1Allotments.reduce((acc, a) => {
+    // Group allotments by groupId for display and apply filtering/sorting
+    let displayGroups = Object.values(r1Allotments.reduce((acc, a) => {
         if (!acc[a.groupId]) acc[a.groupId] = [];
         acc[a.groupId].push(a);
         return acc;
-    }, {});
+    }, {}));
+
+    // Filtering
+    if (searchTerm) {
+        const q = searchTerm.toLowerCase();
+        displayGroups = displayGroups.filter(g => 
+            g.some(a => a.student.name.toLowerCase().includes(q) || a.student.regNo.toLowerCase().includes(q))
+        );
+    }
+    if (filterBlock !== 'ALL') {
+        displayGroups = displayGroups.filter(g => g[0].room?.block?.number.toString() === filterBlock);
+    }
+    if (filterPlacedBy !== 'ALL') {
+        displayGroups = displayGroups.filter(g => g[0].placedBy === filterPlacedBy);
+    }
+    if (filterRoomType !== 'ALL') {
+        displayGroups = displayGroups.filter(g => g[0].room?.roomType?.code === filterRoomType);
+    }
+
+    // Sorting
+    displayGroups.sort((gA, gB) => {
+        const aFirst = gA[0];
+        const bFirst = gB[0];
+        if (sortBy === 'cgpa-desc') {
+            const avgA = gA.reduce((s, a) => s + a.student.cgpa, 0) / gA.length;
+            const avgB = gB.reduce((s, b) => s + b.student.cgpa, 0) / gB.length;
+            return avgB - avgA;
+        }
+        if (sortBy === 'cgpa-asc') {
+            const avgA = gA.reduce((s, a) => s + a.student.cgpa, 0) / gA.length;
+            const avgB = gB.reduce((s, b) => s + b.student.cgpa, 0) / gB.length;
+            return avgA - avgB;
+        }
+        if (sortBy === 'size-desc') {
+            return gB.length - gA.length;
+        }
+        // Default: block-room
+        if (aFirst.room?.block?.number !== bFirst.room?.block?.number) {
+            return (aFirst.room?.block?.number || 0) - (bFirst.room?.block?.number || 0);
+        }
+        return (aFirst.room?.roomNumber || '').localeCompare(bFirst.room?.roomNumber || '');
+    });
+
+    // Options for dropdowns
+    const uniqueBlocks = [...new Set(r1Allotments.map(a => a.room?.block?.number).filter(Boolean))].sort((a, b) => a - b);
+    const uniqueRoomTypes = [...new Set(r1Allotments.map(a => a.room?.roomType?.code).filter(Boolean))].sort();
 
     return (
         <div className="animate-in">
@@ -304,8 +356,47 @@ export default function AllotmentPage() {
                                         <div className="empty-state"><span className="spinner" style={{ width: 28, height: 28 }} /></div>
                                     ) : (
                                         <>
-                                            <div style={{ marginBottom: '12px', color: 'var(--text-muted)', fontSize: '13px' }}>
-                                                Showing {Object.keys(groupedAllotments).length} groups ({r1Allotments.length} students) — ALLOTTED in Round 1
+                                            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                                                <div style={{ flex: 1, minWidth: '200px' }}>
+                                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Search</label>
+                                                    <input type="text" className="input" placeholder="Search name or reg no..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                                                </div>
+                                                <div style={{ minWidth: '120px' }}>
+                                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Block</label>
+                                                    <select className="input" value={filterBlock} onChange={e => setFilterBlock(e.target.value)}>
+                                                        <option value="ALL">All Blocks</option>
+                                                        {uniqueBlocks.map(b => <option key={b} value={b}>Block {b}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div style={{ minWidth: '120px' }}>
+                                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Placed By</label>
+                                                    <select className="input" value={filterPlacedBy} onChange={e => setFilterPlacedBy(e.target.value)}>
+                                                        <option value="ALL">All Sources</option>
+                                                        <option value="pref1">Pref 1</option>
+                                                        <option value="pref2">Pref 2</option>
+                                                        <option value="vacancy">Vacancy</option>
+                                                    </select>
+                                                </div>
+                                                <div style={{ minWidth: '140px' }}>
+                                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Room Type</label>
+                                                    <select className="input" value={filterRoomType} onChange={e => setFilterRoomType(e.target.value)}>
+                                                        <option value="ALL">All Types</option>
+                                                        {uniqueRoomTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div style={{ minWidth: '160px' }}>
+                                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}>Sort By</label>
+                                                    <select className="input" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+                                                        <option value="block-room">Block & Room Number</option>
+                                                        <option value="cgpa-desc">CGPA (High to Low)</option>
+                                                        <option value="cgpa-asc">CGPA (Low to High)</option>
+                                                        <option value="size-desc">Group Size (Largest first)</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div style={{ marginBottom: '12px', color: 'var(--text-muted)', fontSize: '13px', display: 'flex', justifyContent: 'space-between' }}>
+                                                <span>Showing {displayGroups.length} groups ({displayGroups.reduce((acc, g) => acc + g.length, 0)} students) {displayGroups.length !== Object.keys(r1Allotments.reduce((acc, a) => { acc[a.groupId] = true; return acc; }, {})).length ? ` (filtered from ${Object.keys(r1Allotments.reduce((acc, a) => { acc[a.groupId] = true; return acc; }, {})).length} total allocated groups)` : ''}</span>
                                             </div>
                                             <div className="table-container" style={{ maxHeight: '480px', overflow: 'auto', marginBottom: '20px' }}>
                                                 <table>
@@ -323,7 +414,7 @@ export default function AllotmentPage() {
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {Object.values(groupedAllotments).map((group) => {
+                                                        {displayGroups.map((group) => {
                                                             const first = group[0];
                                                             const names = group.map(a => a.student.name).join(', ');
                                                             const regNos = group.map(a => a.student.regNo).join(', ');
