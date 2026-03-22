@@ -6,7 +6,7 @@ The stack is **Next.js (App Router)**, **React**, **PostgreSQL (Neon)**, and **P
 
 ---
 
-## 🏗️ Architecture & Assumptions
+##  Architecture & Assumptions
 
 - **The Setup:** Next.js API routes handle the heavy lifting for the algorithm, while the frontend gives admins an interactive dashboard to run everything.
 - **Database:** It's fully relational (`Students` → `StudentGroups` → `Allotments` → `Rooms` → `Blocks`). Instead of constantly wiping the DB to test things, occupancy is calculated dynamically per session. This means you can run multiple separate allotment scenarios (sessions) at the same time and compare them.
@@ -14,7 +14,7 @@ The stack is **Next.js (App Router)**, **React**, **PostgreSQL (Neon)**, and **P
 
 ---
 
-## ⚙️ The Engine & Algorithm Nuances
+##  The Engine & Algorithm Nuances
 
 The actual algorithm (`lib/allotment-engine.js`) runs entirely in memory. It crunches the numbers fast and only writes to the database at the very end via a batched Prisma `$transaction` (so if something fails on room 499 of 500, it rolls back cleanly instead of breaking the database).
 
@@ -36,7 +36,7 @@ When triggering Round 1, the admin can choose how aggressive the algorithm shoul
 
 ---
 
-## 🔒 Verification & Round 2
+##  Verification & Round 2
 
 We don't just run the algorithm blind. The session state moves cleanly: `DRAFT` → `ROUND1_DONE` → `ROUND1_LOCKED` → `ROUND2_DONE`.
 
@@ -50,12 +50,12 @@ Once the admin locks Round 1, Round 2 runs. Waitlisted students retry their pref
 
 ---
 
-## 📁 CSV Handling
+##  CSV Handling
 Everything starts with importing data. The client uses `PapaParse` to chew through the uploaded CSVs. It runs strict validation before anything hits the database—ensuring CGPAs are numbers, years are valid, and groups aren't doing impossible things (like three people applying for a single room). It also generates custom CSV reports (Master List, Round 1 results, Block-specific reports) at the end.
 
 ---
 
-## 🔮 A Note on Development
+##  A Note on Development
 To be completely honest, a lot of this project was "vibe coded". I knew exactly how I wanted the MIT allotment logic to work, but I had gaps in my knowledge when it came to wiring up the modern Next.js App Router, Prisma, and complex React state. 
 
 Instead of getting bogged down in tutorials, I used AI prompt-engineering to collaboratively write the code, bridge the things I didn't know, and get the actual business logic functional. It was a fast, practical way to build out the system while learning the stack as I went.
