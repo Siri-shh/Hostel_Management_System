@@ -1,6 +1,6 @@
 # MIT Hostel Allotment System
 
-I built this specifically to tackle the problem MIT (Manipal Institute of Technology) currently faces every year: a highly stressful, vague, and often opaque hostel allocation process. The goal was to build a system that can handle our complex institutional logic—like CGPA sorting, year-based tiebreakers, and keeping friend groups together—without it turning into a manual spreadsheet nightmare or a random lottery.
+I built this specifically to tackle the problem MIT (Manipal Institute of Technology) currently faces every year: a highly stressful, vague, and often opaque hostel allocation process. The goal was to build a system that can handle our complex institutional logic—like CGPA sorting, year-based tiebreakers, and keeping friend groups together, without it turning into a manual spreadsheet nightmare or a random lottery.
 
 The stack is **Next.js (App Router)**, **React**, **PostgreSQL (Neon)**, and **Prisma ORM**.
 
