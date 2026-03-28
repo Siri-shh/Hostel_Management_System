@@ -8,7 +8,8 @@ export async function GET(request, { params }) {
         const type = searchParams.get('type');
         const blockNum = searchParams.get('blockNum');
         const limitParam = searchParams.get('limit');
-        const sessionId = parseInt(params.sessionId);
+        const { sessionId: sessionIdStr } = await params;
+        const sessionId = parseInt(sessionIdStr);
 
         if (isNaN(sessionId)) return NextResponse.json({ error: 'Invalid session ID' }, { status: 400 });
 

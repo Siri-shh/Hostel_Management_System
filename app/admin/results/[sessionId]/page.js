@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 const COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#8b5cf6', '#ec4899'];
 
 export default function ResultsPage({ params }) {
+    const { sessionId } = use(params);
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
@@ -15,7 +16,7 @@ export default function ResultsPage({ params }) {
     useEffect(() => {
         async function load() {
             try {
-                const res = await fetch(`/api/results/${params.sessionId}`);
+                const res = await fetch(`/api/results/${sessionId}`);
                 const data = await res.json();
                 setStats(data);
             } catch (err) {
@@ -25,7 +26,7 @@ export default function ResultsPage({ params }) {
             }
         }
         load();
-    }, [params.sessionId]);
+    }, [sessionId]);
 
     if (loading) {
         return (
@@ -86,7 +87,7 @@ export default function ResultsPage({ params }) {
             s.regNo, s.name, s.gender, s.year, s.department, s.cgpa, s.block, s.roomNumber, s.roomType, s.round,
         ]);
         const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-        triggerDownload(csv, `allotment_results_session_${params.sessionId}.csv`);
+        triggerDownload(csv, `allotment_results_session_${sessionId}.csv`);
     }
 
     function downloadBlockCSV(blockNum) {
@@ -103,7 +104,7 @@ export default function ResultsPage({ params }) {
             }
         }
         const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-        triggerDownload(csv, `block_${blockNum}_rooms_session_${params.sessionId}.csv`);
+        triggerDownload(csv, `block_${blockNum}_rooms_session_${sessionId}.csv`);
     }
 
     function triggerDownload(csvContent, filename) {
@@ -121,7 +122,7 @@ export default function ResultsPage({ params }) {
             <div className="page-header">
                 <div>
                     <h1>Allotment Results</h1>
-                    <p>Session #{params.sessionId} — {stats.session?.name || ''}</p>
+                    <p>Session #{sessionId} — {stats.session?.name || ''}</p>
                 </div>
             </div>
 
@@ -535,19 +536,19 @@ export default function ResultsPage({ params }) {
                             Clicking any button below will instantly generate and download a custom CSV file directly from the database matching the selected criteria. 
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', padding: '24px' }}>
-                            <a href={`/api/export/${params.sessionId}?type=all`} className="btn btn-outline" style={{ justifyContent: 'flex-start', padding: '16px', fontSize: '15px' }}>
+                            <a href={`/api/export/${sessionId}?type=all`} className="btn btn-outline" style={{ justifyContent: 'flex-start', padding: '16px', fontSize: '15px' }}>
                                 📄 Master Allotment List (All {stats.allotted} placed)
                             </a>
-                            <a href={`/api/export/${params.sessionId}?type=round1`} className="btn btn-outline" style={{ justifyContent: 'flex-start', padding: '16px', fontSize: '15px' }}>
+                            <a href={`/api/export/${sessionId}?type=round1`} className="btn btn-outline" style={{ justifyContent: 'flex-start', padding: '16px', fontSize: '15px' }}>
                                 🎯 Round 1 Results (Preference Matches)
                             </a>
-                            <a href={`/api/export/${params.sessionId}?type=round2`} className="btn btn-outline" style={{ justifyContent: 'flex-start', padding: '16px', fontSize: '15px' }}>
+                            <a href={`/api/export/${sessionId}?type=round2`} className="btn btn-outline" style={{ justifyContent: 'flex-start', padding: '16px', fontSize: '15px' }}>
                                 🔄 Round 2 Results (Random Vacancy Fills)
                             </a>
-                            <a href={`/api/export/${params.sessionId}?type=pref1`} className="btn btn-outline" style={{ justifyContent: 'flex-start', padding: '16px', fontSize: '15px' }}>
+                            <a href={`/api/export/${sessionId}?type=pref1`} className="btn btn-outline" style={{ justifyContent: 'flex-start', padding: '16px', fontSize: '15px' }}>
                                 ⭐ Got First Preference (100% Match)
                             </a>
-                            <a href={`/api/export/${params.sessionId}?type=unplaced`} className="btn btn-outline" style={{ justifyContent: 'flex-start', padding: '16px', fontSize: '15px' }}>
+                            <a href={`/api/export/${sessionId}?type=unplaced`} className="btn btn-outline" style={{ justifyContent: 'flex-start', padding: '16px', fontSize: '15px' }}>
                                 🚫 Unplaced / Off-Campus Students ({stats.waitlisted + stats.offCampus})
                             </a>
                         </div>

@@ -4,7 +4,8 @@ import prisma from '@/lib/prisma';
 
 export async function GET(request, { params }) {
     try {
-        const sessionId = parseInt(params.sessionId);
+        const { sessionId: sessionIdStr } = await params;
+        const sessionId = parseInt(sessionIdStr);
         if (isNaN(sessionId)) {
             return NextResponse.json({ error: 'Invalid session ID' }, { status: 400 });
         }
