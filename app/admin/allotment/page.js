@@ -10,6 +10,7 @@ export default function AllotmentPage() {
     const [roundStats, setRoundStats] = useState(null);
     const [error, setError] = useState('');
     const [algoMode, setAlgoMode] = useState('preference_only');
+    const [portalBusy, setPortalBusy] = useState(false);
 
     // Verification panel state
     const [r1Allotments, setR1Allotments] = useState([]);
@@ -125,6 +126,24 @@ export default function AllotmentPage() {
         } finally {
             setRunning(false);
         }
+    }
+
+    async function setPortalStatus(status) {
+        if (!selectedSession) return;
+        const labels = { OPEN: 'Open to students', CLOSED: 'Close to students', LOCKED: 'Lock (waiting for results)' };
+        if (!confirm(`${labels[status] || status} the student portal for session "${selectedSession.name}"?`)) return;
+        setPortalBusy(true);
+        setError('');
+        try {
+            const res = await fetch(`/api/sessions/${selectedSession.id}/portal`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ portalStatus: status }),
+            });
+            const data = await res.json();
+            if (data.error) { setError(data.error); } else { await fetchSessions(); }
+        } catch (err) { setError('Portal update failed: ' + err.message); }
+        finally { setPortalBusy(false); }
     }
 
     async function resetSession() {
@@ -548,6 +567,38 @@ export default function AllotmentPage() {
                         </div>
                     )}
                 </>
+            )}
+
+            {/* Student Portal Control */}
+            {selectedSession && (
+                <div className="card" style={{ marginTop: '24px' }}>
+                    <div className="card-header">
+                        <span className="card-title">🎓 Student Portal Control</span>
+                        {selectedSession.portalStatus && (
+                            <span className={`badge ${selectedSession.portalStatus === 'OPEN' ? 'badge-success' : selectedSession.portalStatus === 'LOCKED' ? 'badge-warning' : 'badge-info'}`}>
+                                {selectedSession.portalStatus === 'OPEN' ? '🟢 Portal Open' : selectedSession.portalStatus === 'LOCKED' ? '⏳ Portal Locked' : '🔴 Portal Closed'}
+                            </span>
+                        )}
+                    </div>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '16px' }}>
+                        Control whether students can access the portal to form groups and set preferences.
+                        Students visit <strong>/student</strong> to register and apply.
+                    </p>
+                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                        <button className="btn btn-success" onClick={() => setPortalStatus('OPEN')} disabled={portalBusy || selectedSession.portalStatus === 'OPEN'}>
+                            {portalBusy ? <span className="spinner" /> : '🟢 Open Portal'}
+                        </button>
+                        <button className="btn" style={{ background: 'rgba(245,158,11,0.15)', color: '#d97706', border: '1px solid rgba(245,158,11,0.3)' }} onClick={() => setPortalStatus('LOCKED')} disabled={portalBusy || selectedSession.portalStatus === 'LOCKED'}>
+                            {portalBusy ? <span className="spinner" /> : '⏳ Lock Portal (processing)'}
+                        </button>
+                        <button className="btn" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }} onClick={() => setPortalStatus('CLOSED')} disabled={portalBusy || selectedSession.portalStatus === 'CLOSED'}>
+                            {portalBusy ? <span className="spinner" /> : '🔴 Close Portal'}
+                        </button>
+                        <a href="/student" target="_blank" rel="noopener noreferrer" className="btn" style={{ marginLeft: 'auto' }}>
+                            🌐 Open Student Portal →
+                        </a>
+                    </div>
+                </div>
             )}
 
             {/* Algorithm Info */}

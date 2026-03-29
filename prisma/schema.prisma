@@ -26,6 +26,12 @@ enum SessionStatus {
   ROUND2_DONE
 }
 
+enum PortalStatus {
+  CLOSED
+  OPEN
+  LOCKED
+}
+
 model Block {
   id            Int      @id @default(autoincrement())
   number        Int      @unique
@@ -37,6 +43,8 @@ model Block {
   roomConfigs   BlockRoomConfig[]
   pref1Groups   StudentGroup[]     @relation("Pref1Block")
   pref2Groups   StudentGroup[]     @relation("Pref2Block")
+  portalPref1Groups PortalGroup[]  @relation("PortalPref1Block")
+  portalPref2Groups PortalGroup[]  @relation("PortalPref2Block")
 
   @@map("blocks")
 }
@@ -51,6 +59,8 @@ model RoomType {
   roomConfigs BlockRoomConfig[]
   pref1Groups StudentGroup[]     @relation("Pref1RoomType")
   pref2Groups StudentGroup[]     @relation("Pref2RoomType")
+  portalPref1Groups PortalGroup[] @relation("PortalPref1RoomType")
+  portalPref2Groups PortalGroup[] @relation("PortalPref2RoomType")
 
   @@map("room_types")
 }
@@ -85,15 +95,18 @@ model Room {
 }
 
 model AllotmentSession {
-  id        Int           @id @default(autoincrement())
-  name      String
-  status    SessionStatus @default(DRAFT)
-  algoMode  String        @default("preference_only")
-  createdAt DateTime      @default(now())
+  id           Int           @id @default(autoincrement())
+  name         String
+  status       SessionStatus @default(DRAFT)
+  algoMode     String        @default("preference_only")
+  portalStatus PortalStatus  @default(CLOSED)
+  createdAt    DateTime      @default(now())
 
-  students  Student[]
-  groups    StudentGroup[]
-  allotments Allotment[]
+  students     Student[]
+  groups       StudentGroup[]
+  allotments   Allotment[]
+  portalGroups PortalGroup[]
+  portalStudents PortalStudent[]
 
   @@map("allotment_sessions")
 }
@@ -107,6 +120,7 @@ model Student {
   department String
   cgpa       Float
   sessionId  Int
+  password   String? // bcrypt hash, set when student registers on the portal
 
   // Store raw preferences from CSV so allotment can work even without groups
   pref1BlockNum     Int?
@@ -114,7 +128,7 @@ model Student {
   pref2BlockNum     Int?
   pref2RoomTypeCode String?
 
-  session    AllotmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session          AllotmentSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   groupMemberships GroupMember[]
   allotments       Allotment[]
 
@@ -172,4 +186,63 @@ model Allotment {
 
   @@unique([studentId, sessionId, round])
   @@map("allotments")
+}
+
+// PortalStudent: real students who self-register on the student portal.
+// Completely separate from the CSV-imported Student model used for algorithm demos.
+model PortalStudent {
+  id         Int    @id @default(autoincrement())
+  regNo      String
+  name       String
+  gender     Gender
+  year       Int
+  department String
+  cgpa       Float
+  password   String // bcrypt hash
+  sessionId  Int
+  createdAt  DateTime @default(now())
+
+  session      AllotmentSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  groupMemberships PortalGroupMember[]
+  ledGroups    PortalGroup[]       @relation("PortalGroupLeader")
+
+  @@unique([regNo, sessionId])
+  @@map("portal_students")
+}
+
+// PortalGroup: student-created groups formed through the student portal.
+// These are converted to StudentGroup records when the admin triggers allotment.
+model PortalGroup {
+  id              Int      @id @default(autoincrement())
+  sessionId       Int
+  inviteCode      String   @unique // e.g. "XC9-2B4"
+  leaderId        Int      // portalStudentId of whoever created the group
+  pref1BlockId    Int?
+  pref1RoomTypeId Int?
+  pref2BlockId    Int?
+  pref2RoomTypeId Int?
+  isSubmitted     Boolean  @default(false) // true once preferences are locked in
+  createdAt       DateTime @default(now())
+
+  session       AllotmentSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  leader        PortalStudent      @relation("PortalGroupLeader", fields: [leaderId], references: [id], onDelete: Cascade)
+  pref1Block    Block?   @relation("PortalPref1Block",    fields: [pref1BlockId],    references: [id])
+  pref1RoomType RoomType? @relation("PortalPref1RoomType", fields: [pref1RoomTypeId], references: [id])
+  pref2Block    Block?   @relation("PortalPref2Block",    fields: [pref2BlockId],    references: [id])
+  pref2RoomType RoomType? @relation("PortalPref2RoomType", fields: [pref2RoomTypeId], references: [id])
+  members       PortalGroupMember[]
+
+  @@map("portal_groups")
+}
+
+model PortalGroupMember {
+  id              Int @id @default(autoincrement())
+  portalGroupId   Int
+  portalStudentId Int
+
+  portalGroup   PortalGroup   @relation(fields: [portalGroupId],   references: [id], onDelete: Cascade)
+  portalStudent PortalStudent @relation(fields: [portalStudentId], references: [id], onDelete: Cascade)
+
+  @@unique([portalStudentId, portalGroupId])
+  @@map("portal_group_members")
 }

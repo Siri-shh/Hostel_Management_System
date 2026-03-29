@@ -88,19 +88,18 @@ export default function Home() {
                     </Link>
 
                     {/* Student Portal */}
-                    <div className="portal-card portal-student disabled">
+                    <Link href="/student" className="portal-card portal-student">
                         <div className="portal-icon-wrap student-icon-wrap">
                             <span className="portal-icon">🎓</span>
                         </div>
                         <h2 className="portal-title">Student Portal</h2>
                         <p className="portal-desc">
-                            Apply for hostel rooms, choose roommates, and set your block preferences.
+                            Apply for hostel rooms, form your group, set block preferences, and check your allotment results.
                         </p>
-                        <div className="portal-maintenance">
-                            <span className="maintenance-badge">🔧 Under Maintenance</span>
-                            <p>Coming soon — this portal is currently being developed.</p>
+                        <div className="portal-action">
+                            Enter Portal <span className="portal-arrow">→</span>
                         </div>
-                    </div>
+                    </Link>
                 </div>
 
                 {/* ===================== INFO SECTIONS ===================== */}
