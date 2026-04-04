@@ -31,7 +31,10 @@ export async function POST(request) {
         const blockMap = Object.fromEntries(blocks.map(b => [b.number, b]));
         const rtMap = Object.fromEntries(roomTypes.map(rt => [rt.code, rt]));
 
-        // --- Batch-insert students (now with preferences) ---
+        // --- Batch-insert students ---
+        // source: 'CSV' is set explicitly. skipDuplicates ensures that if a student
+        // already self-registered via the portal (same regNo, same session), the CSV
+        // row is silently skipped rather than crashing — their portal data is preserved.
         const studentDataList = validation.students.map(s => ({
             regNo: s.regNo,
             name: s.name,
@@ -40,7 +43,7 @@ export async function POST(request) {
             department: s.department,
             cgpa: s.cgpa,
             sessionId: session.id,
-            // Store raw preferences so allotment engine can use them directly
+            source: 'CSV',
             pref1BlockNum: s.pref1Block,
             pref1RoomTypeCode: s.pref1RoomType,
             pref2BlockNum: s.pref2Block,
@@ -50,6 +53,7 @@ export async function POST(request) {
         for (let i = 0; i < studentDataList.length; i += BATCH_SIZE) {
             await prisma.student.createMany({
                 data: studentDataList.slice(i, i + BATCH_SIZE),
+                skipDuplicates: true,  // don't overwrite portal-registered students
             });
         }
 

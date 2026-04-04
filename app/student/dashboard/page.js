@@ -169,17 +169,24 @@ export default function StudentDashboard() {
             </nav>
 
             <div className="s-container s-animate-in">
-                {/* Header */}
-                <div className="s-page-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-                    <div>
-                        <h1>Welcome, {student.name.split(' ')[0]} 👋</h1>
-                        <p>{student.regNo} · {student.department} · Year {student.year} · CGPA {student.cgpa}</p>
+                {/* Glass Profile Header */}
+                <div className="s-card s-card-glow s-animate-in" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px', padding: '32px 40px', background: 'linear-gradient(135deg, rgba(26, 34, 52, 0.8) 0%, rgba(10, 15, 26, 0.9) 100%)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+                        <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--s-teal), var(--s-green))', color: '#0A0F1A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', fontWeight: 800, fontFamily: 'Outfit' }}>
+                            {student.name[0]}
+                        </div>
+                        <div>
+                            <h1 style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 800, marginBottom: '4px', letterSpacing: '-0.02em' }}>Welcome, {student.name.split(' ')[0]} <span style={{ opacity: 0.8 }}>👋</span></h1>
+                            <p style={{ color: 'var(--s-text-secondary)', fontSize: '15px' }}>
+                                <span style={{ fontWeight: 600, color: 'var(--s-text-primary)' }}>{student.regNo}</span> <span style={{ opacity: 0.5 }}>•</span> {student.department} <span style={{ opacity: 0.5 }}>•</span> Year {student.year} <span style={{ opacity: 0.5 }}>•</span> CGPA <span style={{ color: 'var(--s-teal)', fontWeight: 600 }}>{student.cgpa}</span>
+                            </p>
+                        </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        <span className={`s-badge ${student.gender === 'MALE' ? 's-badge-blue' : 's-badge-teal'}`}>
+                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                        <span className={`s-badge ${student.gender === 'MALE' ? 's-badge-blue' : 's-badge-teal'}`} style={{ padding: '8px 16px', fontSize: '13px' }}>
                             {student.gender === 'MALE' ? '👦 Boys Hostel' : '👧 Girls Hostel'}
                         </span>
-                        <a href="/student/blocks" className="s-btn s-btn-ghost" style={{ fontSize: '13px', padding: '6px 14px' }}>🏢 View Campus</a>
+                        <a href="/student/blocks" className="s-btn s-btn-ghost" style={{ fontSize: '13px', padding: '8px 16px' }}>🏢 View Campus</a>
                     </div>
                 </div>
 
@@ -280,17 +287,25 @@ export default function StudentDashboard() {
                         </div>
 
                         {groupAction === 'create' && (
-                            <button className="s-btn s-btn-primary s-btn-lg" onClick={createGroup} disabled={groupBusy} style={{ width: '100%', justifyContent: 'center' }}>
-                                {groupBusy ? <><span className="s-spinner" /> Creating...</> : '✅ Create My Group'}
-                            </button>
+                            <div className="s-animate-in" style={{ padding: '24px', background: 'rgba(99,209,183,0.05)', borderRadius: '16px', border: '1px solid rgba(99,209,183,0.2)', marginTop: '20px' }}>
+                                <h4 style={{ marginBottom: '12px', fontSize: '16px', color: 'var(--s-text-primary)' }}>Start a New Group</h4>
+                                <p style={{ color: 'var(--s-text-secondary)', marginBottom: '20px', fontSize: '14px' }}>As the creator, you will be the group leader. You can invite up to 2 friends, and only you can submit preferences.</p>
+                                <button className="s-btn s-btn-primary s-btn-lg" onClick={createGroup} disabled={groupBusy} style={{ width: '100%', justifyContent: 'center' }}>
+                                    {groupBusy ? <><span className="s-spinner" /> Creating...</> : '🚀 Create My Group Now'}
+                                </button>
+                            </div>
                         )}
 
                         {groupAction === 'join' && (
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <input className="s-input" placeholder="Enter invite code (e.g. XC9-2B4)" value={inviteInput} onChange={e => setInviteInput(e.target.value.toUpperCase())} style={{ flex: 1, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700 }} />
-                                <button className="s-btn s-btn-primary" onClick={joinGroup} disabled={groupBusy}>
-                                    {groupBusy ? <span className="s-spinner" /> : 'Join →'}
-                                </button>
+                            <div className="s-animate-in" style={{ padding: '24px', background: 'rgba(96,165,250,0.05)', borderRadius: '16px', border: '1px solid rgba(96,165,250,0.2)', marginTop: '20px' }}>
+                                <h4 style={{ marginBottom: '12px', fontSize: '16px', color: 'var(--s-text-primary)' }}>Join an Existing Group</h4>
+                                <p style={{ color: 'var(--s-text-secondary)', marginBottom: '20px', fontSize: '14px' }}>Ask your friend for their invite code and paste it below to join their group.</p>
+                                <div style={{ display: 'flex', gap: '12px' }}>
+                                    <input className="s-input" placeholder="Enter invite code (e.g. XC9-2B4)" value={inviteInput} onChange={e => setInviteInput(e.target.value.toUpperCase())} style={{ flex: 1, textTransform: 'uppercase', letterSpacing: '0.15em', fontWeight: 800, padding: '16px', fontSize: '16px' }} />
+                                    <button className="s-btn s-btn-primary" onClick={joinGroup} disabled={groupBusy} style={{ padding: '14px 28px', fontSize: '16px' }}>
+                                        {groupBusy ? <span className="s-spinner" /> : 'Join →'}
+                                    </button>
+                                </div>
                             </div>
                         )}
 
@@ -354,19 +369,21 @@ export default function StudentDashboard() {
 
                         {/* Preferences Display */}
                         {portalGroup.pref1 && (
-                            <div style={{ marginBottom: '16px' }}>
-                                <div style={{ fontWeight: 700, fontSize: '13px', marginBottom: '10px', color: 'var(--s-text-secondary)' }}>Selected Preferences</div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                    <div style={{ padding: '14px', background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.15)', borderRadius: '10px' }}>
-                                        <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--s-green)', marginBottom: '4px' }}>PREF 1 🎯</div>
-                                        <div style={{ fontWeight: 700 }}>Block {portalGroup.pref1.block.number}</div>
-                                        <div style={{ fontSize: '13px', color: 'var(--s-text-muted)' }}>{portalGroup.pref1.roomType?.name}</div>
+                            <div style={{ marginBottom: '24px', padding: '24px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid var(--s-border)' }}>
+                                <div style={{ fontWeight: 700, fontSize: '14px', marginBottom: '16px', color: 'var(--s-text-primary)' }}>Saved Preferences</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                    <div style={{ padding: '20px', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: '12px', transition: 'all 0.3s' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                            <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--s-green)', letterSpacing: '0.1em' }}>PRIORITY 1 🎯</div>
+                                        </div>
+                                        <div style={{ fontSize: '24px', fontWeight: 800, fontFamily: 'Outfit', color: 'var(--s-text-primary)' }}>Block {portalGroup.pref1.block.number}</div>
+                                        <div style={{ fontSize: '14px', color: 'var(--s-text-secondary)', marginTop: '4px' }}>{portalGroup.pref1.roomType?.name}</div>
                                     </div>
                                     {portalGroup.pref2 && (
-                                        <div style={{ padding: '14px', background: 'rgba(99,209,183,0.06)', border: '1px solid rgba(99,209,183,0.15)', borderRadius: '10px' }}>
-                                            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--s-teal)', marginBottom: '4px' }}>PREF 2 🔄</div>
-                                            <div style={{ fontWeight: 700 }}>Block {portalGroup.pref2.block.number}</div>
-                                            <div style={{ fontSize: '13px', color: 'var(--s-text-muted)' }}>{portalGroup.pref2.roomType?.name}</div>
+                                        <div style={{ padding: '20px', background: 'rgba(99,209,183,0.06)', border: '1px dashed rgba(99,209,183,0.3)', borderRadius: '12px' }}>
+                                            <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--s-teal)', letterSpacing: '0.1em', marginBottom: '12px' }}>BACKUP CHOICE 🔄</div>
+                                            <div style={{ fontSize: '24px', fontWeight: 800, fontFamily: 'Outfit', color: 'var(--s-text-primary)' }}>Block {portalGroup.pref2.block.number}</div>
+                                            <div style={{ fontSize: '14px', color: 'var(--s-text-secondary)', marginTop: '4px' }}>{portalGroup.pref2.roomType?.name}</div>
                                         </div>
                                     )}
                                 </div>

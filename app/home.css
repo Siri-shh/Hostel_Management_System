@@ -26,27 +26,27 @@
 }
 
 .orb-1 {
-    width: 500px;
-    height: 500px;
-    background: radial-gradient(circle, #6366f1, transparent 70%);
-    top: -10%;
-    left: -5%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, #4F46E5, transparent 70%);
+    top: -15%;
+    left: -10%;
     animation-delay: 0s;
 }
 
 .orb-2 {
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, #8b5cf6, transparent 70%);
-    bottom: -10%;
-    right: -5%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, #E11D48, transparent 70%);
+    bottom: -15%;
+    right: -10%;
     animation-delay: -4s;
 }
 
 .orb-3 {
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, #06b6d4, transparent 70%);
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, #0EA5E9, transparent 70%);
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -133,16 +133,18 @@
 }
 
 .portal-card {
-    background: var(--gradient-card);
+    background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-xl);
-    padding: 36px 28px;
+    padding: 40px 32px;
     text-align: center;
     text-decoration: none;
     color: inherit;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
 }
 
 .portal-card::before {
@@ -196,10 +198,11 @@
 }
 
 .portal-title {
-    font-size: 20px;
-    font-weight: 700;
+    font-family: var(--font-heading);
+    font-size: 24px;
+    font-weight: 800;
     color: var(--text-heading);
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 
 .portal-desc {
@@ -309,11 +312,13 @@
 }
 
 .info-card {
-    background: var(--gradient-card);
+    background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     padding: 24px;
     text-align: left;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 .info-card h4 {
@@ -402,12 +407,14 @@
 
 .step-card {
     flex: 1;
-    background: var(--gradient-card);
+    background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
-    padding: 28px 20px;
+    padding: 32px 24px;
     text-align: center;
-    transition: all 0.25s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 .step-card:hover {

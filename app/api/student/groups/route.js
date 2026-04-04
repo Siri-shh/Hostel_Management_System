@@ -19,22 +19,22 @@ function generateInviteCode() {
     return code;
 }
 
-// GET /api/student/groups — get my current group
+// GET /api/student/groups
 export async function GET(request) {
     const payload = verifyToken(request);
     if (!payload) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const membership = await prisma.portalGroupMember.findFirst({
-        where: { portalStudentId: payload.portalStudentId },
+        where: { studentId: payload.studentId },
         include: {
             portalGroup: {
                 include: {
-                    members: { include: { portalStudent: true } },
+                    members: { include: { student: true } },
                     pref1Block: true, pref1RoomType: true,
                     pref2Block: true, pref2RoomType: true,
-                }
-            }
-        }
+                },
+            },
+        },
     });
 
     if (!membership) return NextResponse.json({ group: null });
@@ -44,21 +44,22 @@ export async function GET(request) {
         group: {
             id: g.id,
             inviteCode: g.inviteCode,
-            isLeader: g.leaderId === payload.portalStudentId,
+            isLeader: g.leaderId === payload.studentId,
             isSubmitted: g.isSubmitted,
             members: g.members.map(m => ({
-                id: m.portalStudent.id, name: m.portalStudent.name,
-                regNo: m.portalStudent.regNo, year: m.portalStudent.year,
-                department: m.portalStudent.department, cgpa: m.portalStudent.cgpa,
-                gender: m.portalStudent.gender,
+                id: m.student.id, name: m.student.name, regNo: m.student.regNo,
+                year: m.student.year, department: m.student.department,
+                cgpa: m.student.cgpa, gender: m.student.gender, source: m.student.source,
             })),
             avgCgpa: g.members.length > 0
-                ? Math.round((g.members.reduce((s, m) => s + m.portalStudent.cgpa, 0) / g.members.length) * 100) / 100
+                ? Math.round((g.members.reduce((s, m) => s + m.student.cgpa, 0) / g.members.length) * 100) / 100
                 : null,
-            priorityYear: g.members.length > 0 ? Math.min(...g.members.map(m => m.portalStudent.year)) : null,
+            priorityYear: g.members.length > 0
+                ? Math.min(...g.members.map(m => m.student.year))
+                : null,
             pref1: g.pref1Block ? { block: g.pref1Block, roomType: g.pref1RoomType } : null,
             pref2: g.pref2Block ? { block: g.pref2Block, roomType: g.pref2RoomType } : null,
-        }
+        },
     });
 }
 
@@ -69,29 +70,32 @@ export async function POST(request) {
 
     const session = await prisma.allotmentSession.findUnique({ where: { id: payload.sessionId } });
     if (!session || session.portalStatus !== 'OPEN') {
-        return NextResponse.json({ error: 'Portal is not open for applications.' }, { status: 400 });
+        return NextResponse.json({ error: 'Portal is not open for group formation.' }, { status: 400 });
     }
 
-    const existing = await prisma.portalGroupMember.findFirst({ where: { portalStudentId: payload.portalStudentId } });
-    if (existing) return NextResponse.json({ error: 'You are already in a group. Leave it first.' }, { status: 409 });
+    const already = await prisma.portalGroupMember.findFirst({ where: { studentId: payload.studentId } });
+    if (already) return NextResponse.json({ error: 'You are already in a group. Leave it first.' }, { status: 409 });
 
+    // Generate a unique invite code
     let inviteCode;
-    let attempts = 0;
-    do {
+    for (let attempts = 0; attempts < 10; attempts++) {
         inviteCode = generateInviteCode();
         const taken = await prisma.portalGroup.findUnique({ where: { inviteCode } });
         if (!taken) break;
-        attempts++;
-    } while (attempts < 10);
+    }
 
     const group = await prisma.portalGroup.create({
         data: {
             sessionId: payload.sessionId,
             inviteCode,
-            leaderId: payload.portalStudentId,
-            members: { create: { portalStudentId: payload.portalStudentId } },
+            leaderId: payload.studentId,
+            members: { create: { studentId: payload.studentId } },
         },
     });
 
-    return NextResponse.json({ message: 'Group created!', inviteCode: group.inviteCode, groupId: group.id });
+    return NextResponse.json({
+        message: 'Group created!',
+        inviteCode: group.inviteCode,
+        groupId: group.id,
+    });
 }

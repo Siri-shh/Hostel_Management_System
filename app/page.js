@@ -39,11 +39,11 @@ const FAQ_DATA = [
     },
     {
         q: 'How do I submit my preferences?',
-        a: 'Currently, preferences are submitted via a CSV file uploaded by the hostel administration. The CSV contains your registration number, name, gender, year, department, CGPA, roommate details (if any), and two preferences — each consisting of a Block number and Room Type code. In the future, a student portal will allow you to submit preferences directly online.',
+        a: 'Preferences are submitted directly through the Student Portal on this website. Register using your registration number, then log in to form a group or apply solo. The group leader selects two preferences (Block + Room Type). Once you submit and lock your preferences, they are saved and processed when the admin runs the allotment. The portal can only be used during the OPEN window — once the admin locks it, no further changes are possible.',
     },
     {
         q: 'Is the allotment final or can it change?',
-        a: 'Once both rounds are complete, the allotment results are saved to the database and can be viewed or exported. In the current MVP, manual overrides and room swap requests are planned as future features. Contact the hostel administration for any post-allotment changes.',
+        a: 'Once both rounds are complete, the allotment results are saved and visible in the Student Portal. The admin has a verification window between Round 1 and Round 2 to manually disallow any allotment (e.g., due to dues or disciplinary issues), which frees that room for Round 2. After Round 2 is finalised, results are permanent. Contact the hostel office for any exceptional post-allotment requests.',
     },
 ];
 
@@ -147,14 +147,14 @@ export default function Home() {
                     <div className="steps-flow">
                         <div className="step-card">
                             <div className="step-number">1</div>
-                            <h4>Submit Preferences</h4>
-                            <p>Fill in your details and choose two preferences. Each preference is a combination of a <strong>Block</strong> and a <strong>Room Type</strong>. You can optionally add up to 2 roommates.</p>
+                            <h4>Register &amp; Submit via Portal</h4>
+                            <p>Log in to the <strong>Student Portal</strong>, form a group with up to 2 friends using an invite code, and have your group leader select two preferences — each is a <strong>Block</strong> and <strong>Room Type</strong> combination.</p>
                         </div>
                         <div className="step-connector">→</div>
                         <div className="step-card">
                             <div className="step-number">2</div>
                             <h4>Algorithm Runs</h4>
-                            <p>The system sorts all students/groups by <strong>CGPA</strong> (highest first) and assigns rooms based on preference availability. Two rounds are run to maximize placements.</p>
+                            <p>Groups are sorted by <strong>average CGPA</strong> (highest first). Year of study acts as a tiebreaker (Year 2 &gt; Year 3 &gt; Year 4). Two rounds run to maximise placements across all blocks.</p>
                         </div>
                         <div className="step-connector">→</div>
                         <div className="step-card">
@@ -165,35 +165,27 @@ export default function Home() {
                     </div>
                 </section>
 
-                {/* --- Preference Form Guide --- */}
+                {/* --- Preference & Portal Guide --- */}
                 <section className="info-section" id="preferences">
                     <div className="info-section-icon">📝</div>
-                    <h2 className="info-section-title">How to Fill Your Preferences</h2>
-                    <p className="info-section-subtitle">Each student must provide the following information</p>
+                    <h2 className="info-section-title">How to Use the Student Portal</h2>
+                    <p className="info-section-subtitle">Submit your preferences in 4 simple steps via the online portal</p>
 
                     <div className="form-guide">
                         <div className="form-guide-table">
                             <div className="fg-row fg-header">
-                                <span>Field</span><span>Description</span><span>Example</span>
+                                <span>Step</span><span>Action</span><span>Notes</span>
                             </div>
-                            <div className="fg-row"><span>Registration No.</span><span>Your unique MIT registration number</span><span className="fg-mono">210905001</span></div>
-                            <div className="fg-row"><span>Full Name</span><span>As per college records</span><span className="fg-mono">Rahul Sharma</span></div>
-                            <div className="fg-row"><span>Gender</span><span>M (Male) or F (Female)</span><span className="fg-mono">M</span></div>
-                            <div className="fg-row"><span>Year</span><span>Current year of study (2, 3, or 4)</span><span className="fg-mono">3</span></div>
-                            <div className="fg-row"><span>Department</span><span>Branch abbreviation</span><span className="fg-mono">CSE</span></div>
-                            <div className="fg-row"><span>CGPA</span><span>Cumulative GPA (0.0 – 10.0)</span><span className="fg-mono">8.75</span></div>
-                            <div className="fg-row fg-highlight"><span>Roommate 1</span><span>Reg. no. of your first roommate (optional)</span><span className="fg-mono">210905002</span></div>
-                            <div className="fg-row fg-highlight"><span>Roommate 2</span><span>Reg. no. of your second roommate (optional)</span><span className="fg-mono">—</span></div>
-                            <div className="fg-row fg-pref"><span>Preference 1: Block</span><span>Block number for your first choice</span><span className="fg-mono">14</span></div>
-                            <div className="fg-row fg-pref"><span>Preference 1: Room Type</span><span>Room type code for your first choice</span><span className="fg-mono">SAC</span></div>
-                            <div className="fg-row fg-pref"><span>Preference 2: Block</span><span>Block number for your second choice</span><span className="fg-mono">18</span></div>
-                            <div className="fg-row fg-pref"><span>Preference 2: Room Type</span><span>Room type code for your second choice</span><span className="fg-mono">SA</span></div>
+                            <div className="fg-row fg-pref"><span>1 — Register</span><span>Visit the Student Portal and create an account using your 9-digit reg. no., name, gender, year, department, and CGPA.</span><span className="fg-mono">Only if portal is OPEN</span></div>
+                            <div className="fg-row fg-highlight"><span>2 — Form Group</span><span>Create a group and share your invite code with up to 2 friends. All members must be the same gender. You can also apply solo.</span><span className="fg-mono">Max 3 members</span></div>
+                            <div className="fg-row fg-highlight"><span>3 — Set Preferences</span><span>As group leader, choose Preference 1 (Block + Room Type) and Preference 2. Room type capacity must fit your group size.</span><span className="fg-mono">Leader only</span></div>
+                            <div className="fg-row fg-pref"><span>4 — Lock &amp; Submit</span><span>Click "Submit &amp; Lock Preferences". Once locked, no further changes can be made — your application enters the allotment queue.</span><span className="fg-mono">Irreversible</span></div>
                         </div>
                     </div>
 
                     <div className="info-note" style={{ marginTop: '20px' }}>
                         <span className="info-note-icon">💡</span>
-                        <p><strong>Tip:</strong> If you apply with a roommate, both of you must list each other's registration number. Your CGPAs will be averaged, and you will be allotted to the same room together. Make sure your roommate's chosen preferences are compatible with your group size (e.g., a pair cannot choose a Single room).</p>
+                        <p><strong>Important:</strong> All group members must register individually. The group's priority score is the <strong>average CGPA</strong> of all members. Make sure your selected room type capacity is large enough for your group — a pair (2 students) cannot choose a Single room, and a triple (3 students) needs at minimum a room with capacity ≥ 3.</p>
                     </div>
                 </section>
 
@@ -245,15 +237,15 @@ export default function Home() {
                         <div className="algo-step">
                             <div className="algo-step-num">Step 2</div>
                             <div className="algo-step-content">
-                                <h4>CGPA Sorting</h4>
-                                <p>All groups are sorted by their average CGPA in <strong>descending order</strong>. The group with the highest CGPA gets allocated first.</p>
+                                <h4>Priority Sorting</h4>
+                                <p>All groups are sorted by <strong>average CGPA descending</strong>. When two groups have the same CGPA, the one with a lower year of study wins (<em>Year 2 &gt; Year 3 &gt; Year 4</em>). The highest-priority group is allocated first.</p>
                             </div>
                         </div>
                         <div className="algo-step">
                             <div className="algo-step-num">Step 3</div>
                             <div className="algo-step-content">
-                                <h4>Preference-Based Allocation (Round 1)</h4>
-                                <p>For each group (highest CGPA first), the system tries: <strong>Preference 1</strong> → <strong>Preference 2</strong> → <strong>Any random vacant room</strong> matching the student's gender and group size. If no room is available at all, the group is <strong>waitlisted</strong>.</p>
+                                <h4>Allocation Round 1</h4>
+                                <p>For each group (priority order), the system tries: <strong>Pref 1</strong> → <strong>Pref 2</strong>. In <em>Smart Vacancy</em> mode, it also searches all remaining compatible rooms (prioritising popular blocks first). Groups that still cannot be placed are <strong>waitlisted</strong>.</p>
                             </div>
                         </div>
                         <div className="algo-step">

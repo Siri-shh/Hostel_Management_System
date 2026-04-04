@@ -35,9 +35,9 @@ export default function CampusBlocksPage() {
             </nav>
 
             <div className="s-container s-animate-in">
-                <div className="s-page-header">
-                    <h1>🏢 Campus Hostel Blocks</h1>
-                    <p>Browse all hostel blocks, room types, and capacity information to help choose your preferences.</p>
+                <div className="s-card s-card-glow s-animate-in" style={{ padding: '32px 40px', background: 'linear-gradient(135deg, rgba(26, 34, 52, 0.8) 0%, rgba(10, 15, 26, 0.9) 100%)', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '32px' }}>
+                    <h1 style={{ fontFamily: 'Outfit', fontSize: '32px', fontWeight: 800, marginBottom: '8px', letterSpacing: '-0.02em', color: 'var(--s-teal)' }}>🏢 Campus Hostel Blocks</h1>
+                    <p style={{ color: 'var(--s-text-secondary)', fontSize: '15px' }}>Browse all hostel blocks, room types, and capacity information to help choose your preferences for the upcoming allotment.</p>
                 </div>
 
                 {loading ? (

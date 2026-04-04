@@ -31,54 +31,54 @@ export default function StudentLandingPage() {
                 </div>
             </nav>
 
-            <div className="s-hero">
-                <div className="s-hero-badge">
+            <div className="s-hero" style={{ position: 'relative', zIndex: 1 }}>
+                <div className="s-hero-badge" style={{ animation: 's-fadeUp 0.6s ease both' }}>
                     <span>🏛️</span> Manipal Institute of Technology
                 </div>
-                <h1>MIT Hostel<br />Allotment Portal</h1>
-                <p>A transparent, merit-based hostel room allocation system. Form your group, set your preferences, and track your allotment — all in one place.</p>
+                <h1 style={{ animation: 's-fadeUp 0.6s ease 0.1s both', background: 'linear-gradient(135deg, #FFFFFF 0%, #63d1b7 50%, #10B981 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>MIT Hostel<br />Allotment Portal</h1>
+                <p style={{ animation: 's-fadeUp 0.6s ease 0.2s both', fontSize: '18px', maxWidth: '600px', lineHeight: 1.7, color: 'var(--s-text-secondary)' }}>A perfectly transparent, merit-based hostel allocation system. Join forces with your friends, establish your priorities, and track your allotment instantly.</p>
 
-                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                    <a href="/student/login" className="s-btn s-btn-primary s-btn-lg">
-                        🚀 Get Started — Login / Register
+                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '24px', animation: 's-fadeUp 0.6s ease 0.3s both' }}>
+                    <a href="/student/login" className="s-btn s-btn-primary s-btn-lg" style={{ padding: '16px 36px', fontSize: '16px', boxShadow: '0 8px 32px rgba(99,209,183,0.4)', borderRadius: '100px' }}>
+                        🚀 Get Started — Portal Login
                     </a>
-                    <a href="/student/blocks" className="s-btn s-btn-outline s-btn-lg">
-                        🏢 Browse Blocks
+                    <a href="/student/blocks" className="s-btn s-btn-outline s-btn-lg" style={{ padding: '16px 36px', fontSize: '16px', borderRadius: '100px', backdropFilter: 'blur(12px)' }}>
+                        🏢 Browse Campus
                     </a>
                 </div>
 
                 {stats && (
-                    <div className="s-hero-grid">
-                        <div className="s-hero-stat">
-                            <h3>{stats.blocks}</h3>
-                            <p>Hostel Blocks</p>
+                    <div className="s-hero-grid" style={{ animation: 's-fadeUp 0.6s ease 0.4s both', marginTop: '64px' }}>
+                        <div className="s-hero-stat" style={{ background: 'linear-gradient(135deg, rgba(26, 34, 52, 0.6) 0%, rgba(10, 15, 26, 0.8) 100%)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px' }}>
+                            <h3 style={{ background: 'linear-gradient(135deg, var(--s-teal) 0%, var(--s-green) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{stats.blocks}</h3>
+                            <p style={{ fontWeight: 600, color: 'var(--s-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '12px' }}>Hostel Blocks</p>
                         </div>
-                        <div className="s-hero-stat">
-                            <h3>{stats.beds.toLocaleString()}</h3>
-                            <p>Total Beds</p>
+                        <div className="s-hero-stat" style={{ background: 'linear-gradient(135deg, rgba(26, 34, 52, 0.6) 0%, rgba(10, 15, 26, 0.8) 100%)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px' }}>
+                            <h3 style={{ background: 'linear-gradient(135deg, var(--s-teal) 0%, var(--s-green) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{stats.beds.toLocaleString()}</h3>
+                            <p style={{ fontWeight: 600, color: 'var(--s-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '12px' }}>Total Beds</p>
                         </div>
-                        <div className="s-hero-stat">
-                            <h3>{stats.boys}B / {stats.girls}G</h3>
-                            <p>Boys / Girls</p>
+                        <div className="s-hero-stat" style={{ background: 'linear-gradient(135deg, rgba(26, 34, 52, 0.6) 0%, rgba(10, 15, 26, 0.8) 100%)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px' }}>
+                            <h3 style={{ background: 'linear-gradient(135deg, var(--s-teal) 0%, var(--s-green) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{stats.boys}B / {stats.girls}G</h3>
+                            <p style={{ fontWeight: 600, color: 'var(--s-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '12px' }}>Boys / Girls</p>
                         </div>
                     </div>
                 )}
             </div>
 
-            <div style={{ padding: '80px 24px', maxWidth: '900px', margin: '0 auto' }}>
-                <h2 style={{ textAlign: 'center', fontFamily: 'Outfit, sans-serif', fontSize: '28px', fontWeight: 700, marginBottom: '40px' }}>How it works</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+            <div style={{ padding: '80px 24px', maxWidth: '1000px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
+                <h2 style={{ textAlign: 'center', fontFamily: 'Outfit, sans-serif', fontSize: '32px', fontWeight: 800, marginBottom: '40px', letterSpacing: '-0.02em', color: 'var(--s-text-primary)' }}>Designed for Transparency</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '24px' }}>
                     {[
-                        { icon: '📋', step: '01', title: 'Register', desc: 'Log in using your Registration Number and set your password.' },
-                        { icon: '👥', step: '02', title: 'Form a Group', desc: 'Apply solo or create a group with up to 2 friends using an invite code.' },
-                        { icon: '🎯', step: '03', title: 'Set Preferences', desc: 'Your group leader chooses Pref 1 and Pref 2 — block and room type.' },
-                        { icon: '🏠', step: '04', title: 'Get Allotted', desc: 'The engine runs after the deadline. Your result appears here instantly.' },
+                        { icon: '📋', step: '01', title: 'Register', desc: 'Securely log in using your Registration Number.' },
+                        { icon: '👥', step: '02', title: 'Form a Group', desc: 'Invite friends seamlessly through a secure invite code.' },
+                        { icon: '🎯', step: '03', title: 'Set Preferences', desc: 'Team leader defines prioritized choices for the group.' },
+                        { icon: '🪐', step: '04', title: 'Get Allotted', desc: 'Algorithm guarantees a merit-based transparent allocation.' },
                     ].map(item => (
-                        <div key={item.step} className="s-card" style={{ padding: '24px' }}>
-                            <div style={{ fontSize: '28px', marginBottom: '12px' }}>{item.icon}</div>
-                            <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: '11px', fontWeight: 700, color: 'var(--s-teal)', letterSpacing: '0.1em', marginBottom: '6px' }}>STEP {item.step}</div>
-                            <div style={{ fontWeight: 700, fontSize: '16px', marginBottom: '8px' }}>{item.title}</div>
-                            <div style={{ fontSize: '14px', color: 'var(--s-text-muted)' }}>{item.desc}</div>
+                        <div key={item.step} className="s-card" style={{ padding: '32px 24px', background: 'linear-gradient(145deg, rgba(26, 34, 52, 0.5) 0%, rgba(10, 15, 26, 0.3) 100%)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '24px', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+                            <div style={{ fontSize: '32px', marginBottom: '16px', background: 'rgba(255,255,255,0.05)',width: '64px', height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '16px' }}>{item.icon}</div>
+                            <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: '12px', fontWeight: 800, color: 'var(--s-teal)', letterSpacing: '0.15em', marginBottom: '8px' }}>STEP {item.step}</div>
+                            <div style={{ fontWeight: 800, fontSize: '18px', marginBottom: '8px', color: 'var(--s-text-primary)' }}>{item.title}</div>
+                            <div style={{ fontSize: '14px', color: 'var(--s-text-secondary)', lineHeight: 1.6 }}>{item.desc}</div>
                         </div>
                     ))}
                 </div>
