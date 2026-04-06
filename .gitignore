@@ -37,7 +37,20 @@ yarn-error.log*
 next-env.d.ts
 
 
+# project-specific non-source files
 SYNOPSIS.md
 SYNOPSIS.txt
 synthetic_data_prompt.txt
 /test data csv outputs
+
+# one-off debug & test scripts in root
+check-prisma.mjs
+test-api.js
+
+# dev/maintenance scripts (generated during development)
+# setup-db-extensions.js is intentionally kept — needed for live DB setup
+scripts/cleanup-test-students.js
+scripts/db-audit.js
+scripts/fix-db.js
+scripts/get-ids.js
+scripts/test-sql.js
