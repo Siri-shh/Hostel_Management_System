@@ -6,7 +6,60 @@ The stack is **Next.js (App Router)**, **React**, **PostgreSQL (Neon)**, and **P
 
 ---
 
-##  Architecture & Assumptions
+## 🚀 Getting Started — Run Locally
+
+### Prerequisites
+- [Node.js](https://nodejs.org/) v18 or later
+- A [Neon](https://neon.tech) account (free tier is enough) **or** any PostgreSQL instance
+- `git` installed
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/Siri-shh/Hostel_Management_System.git
+cd Hostel_Management_System
+```
+
+### 2. Install dependencies
+```bash
+npm install
+```
+
+### 3. Set up your environment file
+Create a `.env` file in the root directory:
+```bash
+# .env
+DATABASE_URL="postgresql://<user>:<password>@<host>/<dbname>?sslmode=require"
+JWT_SECRET="any_long_random_secret_string"
+```
+> If using Neon: copy the connection string directly from your Neon project dashboard → **Connection Details → .env**.
+
+### 4. Push the database schema
+This creates all tables, enums, and constraints in your PostgreSQL database:
+```bash
+npx prisma db push
+```
+
+### 5. (Optional) Set up database extensions
+Runs the raw SQL setup script that creates any custom triggers and views:
+```bash
+node scripts/setup-db-extensions.js
+```
+
+### 6. Start the development server
+```bash
+npm run dev
+```
+
+The app will be live at **[http://localhost:3000](http://localhost:3000)**.
+
+### 7. First steps after launch
+1. Go to **`/admin/upload`** and upload a student CSV file to create a new allotment session. Use `sample_data.csv` in the repo root to test.
+2. Go to **`/admin/allotment`** to configure and run the allotment engine.
+3. Students can register and form groups at **`/student`**.
+
+---
+
+## 🏗️ Architecture & Assumptions
 
 - **The Setup:** Next.js API routes handle the heavy lifting for the algorithm, while the frontend gives admins an interactive dashboard to run everything.
 - **Database:** It's fully relational (`Students` → `StudentGroups` → `Allotments` → `Rooms` → `Blocks`). Instead of constantly wiping the DB to test things, occupancy is calculated dynamically per session. This means you can run multiple separate allotment scenarios (sessions) at the same time and compare them.
