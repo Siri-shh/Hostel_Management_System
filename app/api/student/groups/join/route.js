@@ -18,7 +18,10 @@ export async function POST(request) {
     const { inviteCode } = await request.json();
     if (!inviteCode) return NextResponse.json({ error: 'Invite code is required.' }, { status: 400 });
 
-    const session = await prisma.allotmentSession.findUnique({ where: { id: payload.sessionId } });
+    const session = await prisma.allotmentSession.findUnique({
+        where: { id: payload.sessionId },
+        select: { portalStatus: true, maxCgpaDiffEnabled: true, maxCgpaDiff: true },
+    });
     if (!session || session.portalStatus !== 'OPEN') {
         return NextResponse.json({ error: 'Portal is not open.' }, { status: 400 });
     }
@@ -49,6 +52,17 @@ export async function POST(request) {
     const existingGender = group.members[0]?.student?.gender;
     if (existingGender && me.gender !== existingGender) {
         return NextResponse.json({ error: 'Cannot join a group with students of a different gender.' }, { status: 400 });
+    }
+
+    // CGPA difference validation (only for portal groups, only if enabled by admin)
+    if (session.maxCgpaDiffEnabled && session.maxCgpaDiff !== null && group.members.length > 0) {
+        const allCgpas = [...group.members.map(m => m.student.cgpa), me.cgpa];
+        const diff = Math.max(...allCgpas) - Math.min(...allCgpas);
+        if (diff > session.maxCgpaDiff) {
+            return NextResponse.json({
+                error: `CGPA difference too large (${diff.toFixed(2)} > max ${session.maxCgpaDiff}). The admin has set a maximum CGPA spread of ${session.maxCgpaDiff} within a group.`,
+            }, { status: 400 });
+        }
     }
 
     await prisma.portalGroupMember.create({

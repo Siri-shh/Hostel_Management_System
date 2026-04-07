@@ -8,16 +8,20 @@ datasource db {
 }
 
 model AllotmentSession {
-  id            Int           @id @default(autoincrement())
-  name          String
-  status        SessionStatus @default(DRAFT)
-  createdAt     DateTime      @default(now())
-  algoMode      String        @default("preference_only")
-  portalStatus  PortalStatus  @default(CLOSED)
-  allotments    Allotment[]
-  portalGroups  PortalGroup[]
-  studentGroups StudentGroup[]
-  students      Student[]
+  id                   Int           @id @default(autoincrement())
+  name                 String
+  status               SessionStatus @default(DRAFT)
+  createdAt            DateTime      @default(now())
+  algoMode             String        @default("preference_only")
+  portalStatus         PortalStatus  @default(CLOSED)
+  blockCutoffsEnabled  Boolean       @default(false)
+  maxCgpaDiffEnabled   Boolean       @default(false)
+  maxCgpaDiff          Float?
+  allotments           Allotment[]
+  blockCutoffs         BlockCutoff[]
+  portalGroups         PortalGroup[]
+  studentGroups        StudentGroup[]
+  students             Student[]
 
   @@map("allotment_sessions")
 }
@@ -52,19 +56,32 @@ model BlockRoomConfig {
 }
 
 model Block {
-  id               Int              @id @default(autoincrement())
-  number           Int              @unique
-  gender           Gender
-  floors           Int              @default(8)
-  roomsPerFloor    Int              @default(30)
-  roomConfigs       BlockRoomConfig[]
-  pref1PortalGroups PortalGroup[]   @relation("PortalGroupPref1Block")
-  pref2PortalGroups PortalGroup[]   @relation("PortalGroupPref2Block")
-  rooms            Room[]
-  pref1StudentGroups StudentGroup[] @relation("StudentGroupPref1Block")
-  pref2StudentGroups StudentGroup[] @relation("StudentGroupPref2Block")
+  id                 Int              @id @default(autoincrement())
+  number             Int              @unique
+  gender             Gender
+  floors             Int              @default(8)
+  roomsPerFloor      Int              @default(30)
+  blockCutoffs       BlockCutoff[]
+  roomConfigs        BlockRoomConfig[]
+  pref1PortalGroups  PortalGroup[]    @relation("PortalGroupPref1Block")
+  pref2PortalGroups  PortalGroup[]    @relation("PortalGroupPref2Block")
+  rooms              Room[]
+  pref1StudentGroups StudentGroup[]   @relation("StudentGroupPref1Block")
+  pref2StudentGroups StudentGroup[]   @relation("StudentGroupPref2Block")
 
   @@map("blocks")
+}
+
+model BlockCutoff {
+  id        Int              @id @default(autoincrement())
+  sessionId Int
+  blockId   Int
+  minCgpa   Float
+  session   AllotmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  block     Block            @relation(fields: [blockId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, blockId])
+  @@map("block_cutoffs")
 }
 
 model GroupMember {

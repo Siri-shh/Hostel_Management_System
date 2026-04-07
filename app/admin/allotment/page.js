@@ -24,7 +24,51 @@ export default function AllotmentPage() {
     const [filterRoomType, setFilterRoomType] = useState('ALL');
     const [sortBy, setSortBy] = useState('block-room');
 
+    // Algorithm Rules state
+    const [blockCutoffsEnabled, setBlockCutoffsEnabled] = useState(false);
+    const [maxCgpaDiffEnabled, setMaxCgpaDiffEnabled] = useState(false);
+    const [maxCgpaDiff, setMaxCgpaDiff] = useState('');
+    const [blockRows, setBlockRows] = useState([]); // [{id, number, gender, minCgpa}]
+    const [rulesSaving, setRulesSaving] = useState(false);
+    const [rulesSaved, setRulesSaved] = useState(false);
+
     useEffect(() => { fetchSessions(); }, []);
+
+    async function fetchSettings(sessionId) {
+        try {
+            const res = await fetch(`/api/sessions/${sessionId}/settings`);
+            const data = await res.json();
+            setBlockCutoffsEnabled(data.blockCutoffsEnabled || false);
+            setMaxCgpaDiffEnabled(data.maxCgpaDiffEnabled || false);
+            setMaxCgpaDiff(data.maxCgpaDiff ?? '');
+            setBlockRows(data.blocks || []);
+        } catch { /* non-critical */ }
+    }
+
+    async function saveSettings() {
+        if (!selectedSession) return;
+        setRulesSaving(true);
+        setRulesSaved(false);
+        try {
+            const res = await fetch(`/api/sessions/${selectedSession.id}/settings`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    blockCutoffsEnabled,
+                    maxCgpaDiffEnabled,
+                    maxCgpaDiff: maxCgpaDiff === '' ? null : parseFloat(maxCgpaDiff),
+                    cutoffs: blockRows.map(b => ({ blockId: b.id, minCgpa: b.minCgpa })),
+                }),
+            });
+            const data = await res.json();
+            if (data.error) setError(data.error);
+            else setRulesSaved(true);
+        } catch (err) {
+            setError('Failed to save rules: ' + err.message);
+        } finally {
+            setRulesSaving(false);
+        }
+    }
 
     async function fetchSessions() {
         try {
@@ -34,7 +78,10 @@ export default function AllotmentPage() {
             const active = data.sessions?.find(s =>
                 ['DRAFT', 'ROUND1_DONE', 'ROUND1_LOCKED'].includes(s.status)
             );
-            if (active) setSelectedSession(active);
+            if (active) {
+                setSelectedSession(active);
+                if (active.status === 'DRAFT') fetchSettings(active.id);
+            }
         } catch {
             setError('Failed to load sessions');
         } finally {
@@ -271,6 +318,8 @@ export default function AllotmentPage() {
                                 setSelectedSession(s);
                                 setRoundStats(null);
                                 setError('');
+                                setRulesSaved(false);
+                                if (s?.status === 'DRAFT') fetchSettings(s.id);
                             }}
                         >
                             <option value="">— Select a session —</option>
@@ -284,8 +333,103 @@ export default function AllotmentPage() {
 
                     {selectedSession && (
                         <>
-                            {/* ====== DRAFT: Mode Selection + Run R1 ====== */}
+                            {/* ====== DRAFT: Algorithm Rules + Mode Selection + Run R1 ====== */}
                             {selectedSession.status === 'DRAFT' && (
+                                <>
+                                {/* ── Algorithm Rules Card ── */}
+                                <div className="card" style={{ marginBottom: '24px' }}>
+                                    <div className="card-header">
+                                        <span className="card-title">🛡️ Algorithm Rules</span>
+                                        {statusBadge(selectedSession.status)}
+                                    </div>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px' }}>
+                                        Optional constraints applied by the algorithm during allotment. Changes take effect on the next run.
+                                    </p>
+
+                                    {/* Rule 1: Block CGPA Cutoffs */}
+                                    <div style={{ background: 'var(--gradient-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '16px 20px', marginBottom: '16px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: blockCutoffsEnabled ? '16px' : '0' }}>
+                                            <div>
+                                                <div style={{ fontWeight: 700, color: 'var(--text-heading)', fontSize: '14px' }}>🏢 Hard Block CGPA Cutoffs</div>
+                                                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Set minimum CGPA per block. Students below the cutoff will not be allotted there.</div>
+                                            </div>
+                                            <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', flexShrink: 0, marginLeft: '16px' }}>
+                                                <input type="checkbox" checked={blockCutoffsEnabled} onChange={e => setBlockCutoffsEnabled(e.target.checked)} style={{ opacity: 0, width: 0, height: 0 }} />
+                                                <span style={{ position: 'absolute', cursor: 'pointer', inset: 0, background: blockCutoffsEnabled ? 'rgb(99,102,241)' : 'var(--border-color)', borderRadius: '24px', transition: '0.2s' }}>
+                                                    <span style={{ position: 'absolute', height: '18px', width: '18px', left: blockCutoffsEnabled ? '23px' : '3px', bottom: '3px', background: 'white', borderRadius: '50%', transition: '0.2s' }} />
+                                                </span>
+                                            </label>
+                                        </div>
+                                        {blockCutoffsEnabled && (
+                                            <div style={{ maxHeight: '240px', overflowY: 'auto', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+                                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                                                    <thead>
+                                                        <tr style={{ background: 'rgba(99,102,241,0.08)' }}>
+                                                            <th style={{ padding: '8px 12px', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600 }}>Block</th>
+                                                            <th style={{ padding: '8px 12px', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600 }}>Gender</th>
+                                                            <th style={{ padding: '8px 12px', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600 }}>Min CGPA Cutoff</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {blockRows.map(b => (
+                                                            <tr key={b.id} style={{ borderTop: '1px solid var(--border-color)' }}>
+                                                                <td style={{ padding: '8px 12px', color: 'var(--text-heading)', fontWeight: 600 }}>Block {b.number}</td>
+                                                                <td style={{ padding: '8px 12px', color: 'var(--text-muted)' }}>{b.gender}</td>
+                                                                <td style={{ padding: '8px 12px' }}>
+                                                                    <input
+                                                                        type="number" step="0.1" min="0" max="10"
+                                                                        placeholder="No cutoff"
+                                                                        value={b.minCgpa ?? ''}
+                                                                        onChange={e => setBlockRows(rows => rows.map(r => r.id === b.id ? { ...r, minCgpa: e.target.value === '' ? null : parseFloat(e.target.value) } : r))}
+                                                                        style={{ width: '110px', padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'var(--surface)', color: 'var(--text-heading)', fontSize: '13px' }}
+                                                                    />
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Rule 2: Max CGPA Diff */}
+                                    <div style={{ background: 'var(--gradient-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '16px 20px', marginBottom: '20px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <div>
+                                                <div style={{ fontWeight: 700, color: 'var(--text-heading)', fontSize: '14px' }}>👥 Max CGPA Gap in Pairs</div>
+                                                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Prevents students with very different CGPAs from forming a portal group. Does not apply to CSV-imported groups.</div>
+                                            </div>
+                                            <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', flexShrink: 0, marginLeft: '16px' }}>
+                                                <input type="checkbox" checked={maxCgpaDiffEnabled} onChange={e => setMaxCgpaDiffEnabled(e.target.checked)} style={{ opacity: 0, width: 0, height: 0 }} />
+                                                <span style={{ position: 'absolute', cursor: 'pointer', inset: 0, background: maxCgpaDiffEnabled ? 'rgb(34,197,94)' : 'var(--border-color)', borderRadius: '24px', transition: '0.2s' }}>
+                                                    <span style={{ position: 'absolute', height: '18px', width: '18px', left: maxCgpaDiffEnabled ? '23px' : '3px', bottom: '3px', background: 'white', borderRadius: '50%', transition: '0.2s' }} />
+                                                </span>
+                                            </label>
+                                        </div>
+                                        {maxCgpaDiffEnabled && (
+                                            <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <label style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>Max allowed CGPA difference:</label>
+                                                <input
+                                                    type="number" step="0.1" min="0.1" max="10"
+                                                    placeholder="e.g. 1.0"
+                                                    value={maxCgpaDiff}
+                                                    onChange={e => setMaxCgpaDiff(e.target.value)}
+                                                    style={{ width: '100px', padding: '6px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'var(--surface)', color: 'var(--text-heading)', fontSize: '14px' }}
+                                                />
+                                                {maxCgpaDiff && <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>e.g. 8.5 and 7.5 would {parseFloat(maxCgpaDiff) >= 1 ? '✅ pass' : '❌ fail'} (diff = 1.0)</span>}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <button className="btn btn-primary" onClick={saveSettings} disabled={rulesSaving}>
+                                            {rulesSaving ? <><span className="spinner" /> Saving...</> : '💾 Save Rules'}
+                                        </button>
+                                        {rulesSaved && <span style={{ color: '#22c55e', fontSize: '13px', fontWeight: 600 }}>✅ Saved!</span>}
+                                    </div>
+                                </div>
+
+                                {/* ── Algorithm Mode + Run Round 1 Card ── */}
                                 <div className="card" style={{ marginBottom: '24px' }}>
                                     <div className="card-header">
                                         <span className="card-title">⚙️ Algorithm Mode</span>
@@ -353,6 +497,7 @@ export default function AllotmentPage() {
                                         </button>
                                     </div>
                                 </div>
+                                </>
                             )}
 
                             {/* ====== ROUND1_DONE: Verification Panel ====== */}
