@@ -177,8 +177,14 @@ export default function AllotmentPage() {
 
     async function setPortalStatus(status) {
         if (!selectedSession) return;
-        const labels = { OPEN: 'Open to students', CLOSED: 'Close to students', LOCKED: 'Lock (waiting for results)' };
-        if (!confirm(`${labels[status] || status} the student portal for session "${selectedSession.name}"?`)) return;
+        
+        let confirmMsg = `Are you sure you want to ${status} the student portal for session "${selectedSession.name}"?`;
+        if (status === 'OPEN') {
+            confirmMsg = `WARNING: Are you sure you want to OPEN the portal? \n\nChanging the portal status to OPEN will ERASE all existing student portal groups and preferences to ensure a clean slate regarding the new Algorithm Rules.\n\nProceed?`;
+        }
+
+        if (!confirm(confirmMsg)) return;
+        
         setPortalBusy(true);
         setError('');
         try {

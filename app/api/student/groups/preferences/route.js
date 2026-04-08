@@ -47,6 +47,17 @@ export async function PATCH(request) {
     const groupSize = membership.portalGroup.members.length;
     const gender = membership.portalGroup.members[0].student.gender;
 
+    // Enforce Max CGPA Diff at submission time (catches groups formed before rule was enabled)
+    if (submit === true && session.maxCgpaDiffEnabled && session.maxCgpaDiff !== null && groupSize > 1) {
+        const allCgpas = membership.portalGroup.members.map(m => m.student.cgpa);
+        const diff = Math.max(...allCgpas) - Math.min(...allCgpas);
+        if (diff > session.maxCgpaDiff) {
+            return NextResponse.json({
+                error: `Cannot submit: CGPA difference too large (${diff.toFixed(2)} > max allowed ${session.maxCgpaDiff}). Someone must leave the group.`,
+            }, { status: 400 });
+        }
+    }
+
     // Validate pref 1
     const p1b = parseInt(pref1BlockId), p1rt = parseInt(pref1RoomTypeId);
     const p2b = parseInt(pref2BlockId), p2rt = parseInt(pref2RoomTypeId);

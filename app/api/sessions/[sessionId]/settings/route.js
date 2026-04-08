@@ -54,11 +54,14 @@ export async function PATCH(request, { params }) {
     // Only allow changes on DRAFT sessions
     const session = await prisma.allotmentSession.findUnique({
         where: { id: sessionId },
-        select: { status: true },
+        select: { status: true, portalStatus: true },
     });
     if (!session) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     if (session.status !== 'DRAFT') {
         return NextResponse.json({ error: 'Algorithm rules can only be changed on a DRAFT session.' }, { status: 400 });
+    }
+    if (session.portalStatus !== 'CLOSED') {
+        return NextResponse.json({ error: 'Algorithm rules can only be changed when the student portal is CLOSED.' }, { status: 400 });
     }
 
     // Build session update payload (only include defined fields)

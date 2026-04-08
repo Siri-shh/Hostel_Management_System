@@ -208,12 +208,37 @@ BEGIN;
 ROLLBACK;
 
 
--- ---- 3C. Update session portal status ----
+-- ---- 3C. Open Portal & Erase Old Groups (Atomic Transaction) ----
 BEGIN;
     UPDATE allotment_sessions
     SET "portalStatus" = 'OPEN'
-    WHERE id = (SELECT MAX(id) FROM allotment_sessions)
-    RETURNING id, name, status, "portalStatus";
+    WHERE id = (SELECT MAX(id) FROM allotment_sessions);
+    
+    -- When opening the portal, erase existing portal submissions for a clean slate
+    DELETE FROM portal_groups 
+    WHERE "sessionId" = (SELECT MAX(id) FROM allotment_sessions);
+ROLLBACK;
+
+
+-- ---- 3D. Set Algorithm Rules (Block Cutoffs) ----
+BEGIN;
+    -- Enable cutoffs and max CGPA difference on the session
+    UPDATE allotment_sessions
+    SET "blockCutoffsEnabled" = true,
+        "maxCgpaDiffEnabled" = true,
+        "maxCgpaDiff" = 1.5
+    WHERE id = (SELECT MAX(id) FROM allotment_sessions);
+
+    -- Insert/Update a cutoff value for a specific Block
+    INSERT INTO block_cutoffs ("sessionId", "blockId", "minCgpa")
+    VALUES (
+        (SELECT MAX(id) FROM allotment_sessions),
+        (SELECT id FROM blocks LIMIT 1),
+        8.0
+    )
+    ON CONFLICT ("sessionId", "blockId") 
+    DO UPDATE SET "minCgpa" = EXCLUDED."minCgpa"
+    RETURNING "sessionId", "blockId", "minCgpa";
 ROLLBACK;
 
 
