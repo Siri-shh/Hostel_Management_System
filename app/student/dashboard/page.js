@@ -151,10 +151,10 @@ export default function StudentDashboard() {
     const isResultsReady = allotmentStatus === 'ROUND2_DONE' || allotmentStatus === 'ROUND1_LOCKED';
     const isLeader = portalGroup?.isLeader;
 
-    const fees = (isResultsReady && allotment) ? calculateFees(allotment.block, allotment.roomType) : null;
+    const fees = (isResultsReady && allotment) ? calculateFees(allotment.block, allotment.roomTypeCode) : null;
 
     async function downloadPDF() {
-        if (!process.browser && typeof window === 'undefined') return;
+        if (typeof window === 'undefined') return;
         const element = pdfRef.current;
         if (!element) return;
         
@@ -548,7 +548,7 @@ export default function StudentDashboard() {
                                 <tbody>
                                     <tr><td style={{ width: '30%' }}><strong>Block Number:</strong></td><td>Block {allotment.block}</td></tr>
                                     <tr><td><strong>Room Number:</strong></td><td>{allotment.roomNumber} (Floor {allotment.floor})</td></tr>
-                                    <tr><td><strong>Room Type:</strong></td><td>{allotment.roomType}</td></tr>
+                                    <tr><td><strong>Room Type:</strong></td><td>{allotment.roomType} ({allotment.roomTypeCode})</td></tr>
                                     <tr><td><strong>Allotment Round:</strong></td><td>Round {allotment.round}</td></tr>
                                 </tbody>
                             </table>
@@ -556,30 +556,36 @@ export default function StudentDashboard() {
 
                         <div style={{ marginBottom: '40px' }}>
                             <h4 style={{ fontSize: '16px', borderBottom: '1px solid #ccc', paddingBottom: '8px', marginBottom: '16px' }}>Fee Breakdown</h4>
-                            <table style={{ width: '100%', fontSize: '14px', borderCollapse: 'collapse' }}>
-                                <tbody>
-                                    <tr>
-                                        <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc' }}>Annual Hostel Facilities Fee</td>
-                                        <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc', textAlign: 'right' }}>₹{fees.facilitiesFee.toLocaleString()}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc' }}>AC Electricity Advance</td>
-                                        <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc', textAlign: 'right' }}>₹{fees.acElectricityAdvance.toLocaleString()}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc' }}>Hostel Deposit (Refundable)</td>
-                                        <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc', textAlign: 'right' }}>₹{fees.hostelDeposit.toLocaleString()}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc' }}>Mess Advance</td>
-                                        <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc', textAlign: 'right' }}>₹{fees.messAdvance.toLocaleString()}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ padding: '12px 0', borderBottom: '2px solid #000', fontWeight: 'bold' }}>Total Amount Payable</td>
-                                        <td style={{ padding: '12px 0', borderBottom: '2px solid #000', textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>₹{fees.totalAmount.toLocaleString()}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            {fees ? (
+                                <table style={{ width: '100%', fontSize: '14px', borderCollapse: 'collapse' }}>
+                                    <tbody>
+                                        <tr>
+                                            <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc' }}>Annual Hostel Facilities Fee</td>
+                                            <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc', textAlign: 'right' }}>₹{fees.facilitiesFee.toLocaleString('en-IN')}</td>
+                                        </tr>
+                                        {fees.acElectricityAdvance > 0 && (
+                                            <tr>
+                                                <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc' }}>AC Electricity Advance</td>
+                                                <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc', textAlign: 'right' }}>₹{fees.acElectricityAdvance.toLocaleString('en-IN')}</td>
+                                            </tr>
+                                        )}
+                                        <tr>
+                                            <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc' }}>Hostel Deposit (Refundable)</td>
+                                            <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc', textAlign: 'right' }}>₹{fees.hostelDeposit.toLocaleString('en-IN')}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc' }}>Mess Advance</td>
+                                            <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc', textAlign: 'right' }}>₹{fees.messAdvance.toLocaleString('en-IN')}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style={{ padding: '12px 0', borderBottom: '2px solid #000', fontWeight: 'bold' }}>Total Amount Payable</td>
+                                            <td style={{ padding: '12px 0', borderBottom: '2px solid #000', textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>₹{fees.totalAmount.toLocaleString('en-IN')}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            ) : (
+                                <p style={{ color: '#888', fontSize: '13px' }}>Fee details are not available for this room type. Please contact the Hostel Office.</p>
+                            )}
                         </div>
 
                         <div style={{ fontSize: '12px', color: '#555', lineHeight: '1.6', marginTop: '50px', borderTop: '1px solid #eee', paddingTop: '20px' }}>

@@ -35,6 +35,8 @@ export default function AllotmentPage() {
     // Audit Logs state
     const [auditLogs, setAuditLogs] = useState([]);
     const [auditLogsLoading, setAuditLogsLoading] = useState(false);
+    const [auditSetupMsg, setAuditSetupMsg] = useState('');
+    const [auditSetupBusy, setAuditSetupBusy] = useState(false);
 
     useEffect(() => { 
         fetchSessions(); 
@@ -47,10 +49,32 @@ export default function AllotmentPage() {
             const res = await fetch('/api/admin/audit-logs');
             const data = await res.json();
             setAuditLogs(data.logs || []);
+            if (data.warning && !auditSetupMsg) {
+                setAuditSetupMsg('⚠️ ' + data.warning);
+            }
         } catch {
             // non-critical
         } finally {
             setAuditLogsLoading(false);
+        }
+    }
+
+    async function setupAuditLog() {
+        setAuditSetupBusy(true);
+        setAuditSetupMsg('');
+        try {
+            const res = await fetch('/api/admin/setup-audit-log', { method: 'POST' });
+            const data = await res.json();
+            if (data.error) {
+                setAuditSetupMsg('❌ ' + data.error);
+            } else {
+                setAuditSetupMsg('✅ ' + data.message);
+                await fetchAuditLogs();
+            }
+        } catch (err) {
+            setAuditSetupMsg('❌ Network error: ' + err.message);
+        } finally {
+            setAuditSetupBusy(false);
         }
     }
 
@@ -100,7 +124,7 @@ export default function AllotmentPage() {
             );
             if (active) {
                 setSelectedSession(active);
-                if (active.status === 'DRAFT') fetchSettings(active.id);
+                fetchSettings(active.id); // load settings for all active session states
             }
         } catch {
             setError('Failed to load sessions');
@@ -776,12 +800,24 @@ export default function AllotmentPage() {
             <div className="card" style={{ marginTop: '24px' }}>
                 <div className="card-header">
                     <span className="card-title">📜 Session Audit Logs</span>
-                    <button className="btn" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={fetchAuditLogs}>
-                        {auditLogsLoading ? '↻ Loading...' : '↻ Refresh Logs'}
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <button className="btn" style={{ padding: '6px 12px', fontSize: '12px', background: 'var(--accent-blue)', color: '#fff' }}
+                            onClick={setupAuditLog} disabled={auditSetupBusy}>
+                            {auditSetupBusy ? '⏳ Setting up...' : '⚙️ Setup DB Trigger'}
+                        </button>
+                        <button className="btn" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={fetchAuditLogs}>
+                            {auditLogsLoading ? '↻ Loading...' : '↻ Refresh Logs'}
+                        </button>
+                    </div>
                 </div>
+                {auditSetupMsg && (
+                    <p style={{ fontSize: '13px', margin: '8px 0', color: auditSetupMsg.startsWith('✅') ? 'var(--accent-green)' : 'var(--danger)' }}>
+                        {auditSetupMsg}
+                    </p>
+                )}
                 <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '16px' }}>
                     An immutable database history of session status changes tracked by Postgres triggers.
+                    <strong style={{ color: 'var(--accent-blue)' }}> Run "Setup DB Trigger" once</strong> if logs aren't appearing.
                 </p>
 
                 <div className="table-container" style={{ maxHeight: '300px', overflowY: 'auto' }}>

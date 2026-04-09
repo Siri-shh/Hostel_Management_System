@@ -55,3 +55,8 @@ scripts/fix-db.js
 scripts/get-ids.js
 scripts/test-sql.js
 scripts/verify-project.js
+
+# Data and CSV uploads
+/Database smaple inputs/
+/Synthetic Data/
+sample_data.csv
