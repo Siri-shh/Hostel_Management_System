@@ -26,8 +26,6 @@ export default function StudentDashboard() {
     const [prefBusy, setPrefBusy] = useState(false);
     const [prefMsg, setPrefMsg] = useState({ type: '', text: '' });
 
-    const [prefMsg, setPrefMsg] = useState({ type: '', text: '' });
-
     const pdfRef = useRef();
 
     const router = useRouter();

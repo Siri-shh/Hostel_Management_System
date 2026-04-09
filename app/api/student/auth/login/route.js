@@ -16,6 +16,11 @@ export async function POST(request) {
 
         const cleanRegNo = regNo.trim().toUpperCase();
 
+        // Find the globally latest session (Current Academic Year)
+        const latestSession = await prisma.allotmentSession.findFirst({
+            orderBy: { id: 'desc' }
+        });
+
         // Find the most recent Student with this regNo that has a password set
         const student = await prisma.student.findFirst({
             where: {
@@ -31,6 +36,13 @@ export async function POST(request) {
             return NextResponse.json({
                 error: 'No portal account found for this Reg No. Please register first.',
             }, { status: 404 });
+        }
+
+        // Prevent logging into old sessions if a new one is active
+        if (latestSession && student.sessionId !== latestSession.id) {
+            return NextResponse.json({
+                error: 'A new academic session is currently active. Please go to the Register tab to create your profile for this year.',
+            }, { status: 403 });
         }
 
         const valid = await bcrypt.compare(password, student.password);

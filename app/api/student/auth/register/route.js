@@ -123,6 +123,7 @@ export async function POST(request) {
         const existing = await prisma.student.findUnique({
             where: { regNo_sessionId: { regNo: cleanRegNo, sessionId: activeSession.id } },
         });
+
         if (existing) {
             if (existing.source === 'CSV') {
                 return NextResponse.json({
