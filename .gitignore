@@ -48,15 +48,14 @@ check-prisma.mjs
 test-api.js
 
 # dev/maintenance scripts (generated during development)
-# setup-db-extensions.js is intentionally kept — needed for live DB setup
-scripts/cleanup-test-students.js
-scripts/db-audit.js
-scripts/fix-db.js
-scripts/get-ids.js
-scripts/test-sql.js
-scripts/verify-project.js
+/scripts/*
+!/scripts/setup-db-extensions.js
 
 # Data and CSV uploads
 /Database smaple inputs/
+/Database sample inputs/
 /Synthetic Data/
 sample_data.csv
+
+# Project reports (binaries/pdfs)
+DBS LAB REPORT.*
