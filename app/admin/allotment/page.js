@@ -32,7 +32,27 @@ export default function AllotmentPage() {
     const [rulesSaving, setRulesSaving] = useState(false);
     const [rulesSaved, setRulesSaved] = useState(false);
 
-    useEffect(() => { fetchSessions(); }, []);
+    // Audit Logs state
+    const [auditLogs, setAuditLogs] = useState([]);
+    const [auditLogsLoading, setAuditLogsLoading] = useState(false);
+
+    useEffect(() => { 
+        fetchSessions(); 
+        fetchAuditLogs();
+    }, []);
+
+    async function fetchAuditLogs() {
+        setAuditLogsLoading(true);
+        try {
+            const res = await fetch('/api/admin/audit-logs');
+            const data = await res.json();
+            setAuditLogs(data.logs || []);
+        } catch {
+            // non-critical
+        } finally {
+            setAuditLogsLoading(false);
+        }
+    }
 
     async function fetchSettings(sessionId) {
         try {
@@ -751,6 +771,52 @@ export default function AllotmentPage() {
                     </div>
                 </div>
             )}
+
+            {/* Session Audit Logs */}
+            <div className="card" style={{ marginTop: '24px' }}>
+                <div className="card-header">
+                    <span className="card-title">📜 Session Audit Logs</span>
+                    <button className="btn" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={fetchAuditLogs}>
+                        {auditLogsLoading ? '↻ Loading...' : '↻ Refresh Logs'}
+                    </button>
+                </div>
+                <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '16px' }}>
+                    An immutable database history of session status changes tracked by Postgres triggers.
+                </p>
+
+                <div className="table-container" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                    <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', fontSize: '14px' }}>
+                        <thead style={{ position: 'sticky', top: 0, background: 'var(--surface)', zIndex: 10 }}>
+                            <tr style={{ color: 'var(--text-secondary)' }}>
+                                <th style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>Date / Time</th>
+                                <th style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>Session</th>
+                                <th style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>Previous Status</th>
+                                <th style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>New Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {auditLogs.length > 0 ? (
+                                auditLogs.map((log) => (
+                                    <tr key={log.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                        <td style={{ padding: '12px', color: 'var(--text-heading)' }}>
+                                            {new Date(log.changed_at).toLocaleString()}
+                                        </td>
+                                        <td style={{ padding: '12px', fontWeight: 600 }}>{log.session_name || `Session #${log.sessionId}`}</td>
+                                        <td style={{ padding: '12px' }}>{statusBadge(log.old_status)}</td>
+                                        <td style={{ padding: '12px' }}>{statusBadge(log.new_status)}</td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="4" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                        {auditLogsLoading ? 'Loading logs...' : 'No audit logs found in the database.'}
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
             {/* Algorithm Info */}
             <div className="card" style={{ marginTop: '32px' }}>

@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Script from 'next/script';
+import { calculateFees } from '@/lib/fee-calculator';
 
 export default function StudentDashboard() {
     const [data, setData] = useState(null);
@@ -23,6 +25,10 @@ export default function StudentDashboard() {
     const [pref2RtId, setPref2RtId] = useState('');
     const [prefBusy, setPrefBusy] = useState(false);
     const [prefMsg, setPrefMsg] = useState({ type: '', text: '' });
+
+    const [prefMsg, setPrefMsg] = useState({ type: '', text: '' });
+
+    const pdfRef = useRef();
 
     const router = useRouter();
 
@@ -147,6 +153,33 @@ export default function StudentDashboard() {
     const isResultsReady = allotmentStatus === 'ROUND2_DONE' || allotmentStatus === 'ROUND1_LOCKED';
     const isLeader = portalGroup?.isLeader;
 
+    const fees = (isResultsReady && allotment) ? calculateFees(allotment.block, allotment.roomType) : null;
+
+    async function downloadPDF() {
+        if (!process.browser && typeof window === 'undefined') return;
+        const element = pdfRef.current;
+        if (!element) return;
+        
+        // Ensure hidden template is temporarily visible for cloning/rendering
+        element.style.display = 'block';
+
+        const opt = {
+            margin: 0.5,
+            filename: `${student.regNo}_Hostel_Admission_Order.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+
+        try {
+            await window.html2pdf().set(opt).from(element).save();
+        } catch (err) {
+            console.error('PDF generation error:', err);
+        } finally {
+            element.style.display = 'none'; // Hide it again
+        }
+    }
+
     // For preference selection: filter blocks by gender
     const genderBlocks = blocksData.filter(b => b.gender === student.gender);
 
@@ -215,9 +248,14 @@ export default function StudentDashboard() {
                 {/* ===== ALLOTMENT RESULT ===== */}
                 {isResultsReady && allotment && (
                     <div className="s-card s-card-glow s-animate-in" style={{ marginBottom: '28px' }}>
-                        <div className="s-card-header">
-                            <span className="s-card-title">🏠 Your Allotment</span>
-                            <span className="s-badge s-badge-green">✅ Allotted — Round {allotment.round}</span>
+                        <div className="s-card-header" style={{ alignItems: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <span className="s-card-title">🏠 Your Allotment</span>
+                                <span className="s-badge s-badge-green">✅ Allotted — Round {allotment.round}</span>
+                            </div>
+                            <button onClick={downloadPDF} className="s-btn s-btn-primary" style={{ padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                📄 Download Admission Order
+                            </button>
                         </div>
                         <div className="s-result-card">
                             <p className="s-result-label">Block</p>
@@ -478,6 +516,94 @@ export default function StudentDashboard() {
                     </div>
                 )}
             </div>
+            {/* Hidden PDF Template */}
+            {isResultsReady && allotment && fees && (
+                <div style={{ display: 'none' }}>
+                    <div ref={pdfRef} style={{ padding: '40px', fontFamily: '"Arial", sans-serif', color: '#000', backgroundColor: '#fff', width: '800px' }}>
+                        <div style={{ textAlign: 'center', borderBottom: '2px solid #000', paddingBottom: '20px', marginBottom: '30px' }}>
+                            <h1 style={{ fontSize: '24px', margin: '0 0 8px 0', textTransform: 'uppercase', letterSpacing: '1px' }}>Manipal Institute of Technology</h1>
+                            <h2 style={{ fontSize: '18px', margin: 0, fontWeight: 'normal', color: '#444' }}>Hostel Management System</h2>
+                            <h3 style={{ fontSize: '20px', margin: '16px 0 0 0', textDecoration: 'underline' }}>PROVISIONAL HOSTEL ADMISSION ORDER</h3>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px', fontSize: '14px' }}>
+                            <div><strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}</div>
+                            <div><strong>Academic Year:</strong> 2026-27</div>
+                        </div>
+
+                        <div style={{ marginBottom: '30px' }}>
+                            <h4 style={{ fontSize: '16px', borderBottom: '1px solid #ccc', paddingBottom: '8px', marginBottom: '16px' }}>Student Details</h4>
+                            <table style={{ width: '100%', fontSize: '14px', lineHeight: '2' }}>
+                                <tbody>
+                                    <tr><td style={{ width: '30%' }}><strong>Registration Number:</strong></td><td>{student.regNo}</td></tr>
+                                    <tr><td><strong>Name:</strong></td><td>{student.name}</td></tr>
+                                    <tr><td><strong>Department:</strong></td><td>{student.department}</td></tr>
+                                    <tr><td><strong>Year of Study:</strong></td><td>{student.year}</td></tr>
+                                    <tr><td><strong>Gender:</strong></td><td>{student.gender}</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div style={{ marginBottom: '30px' }}>
+                            <h4 style={{ fontSize: '16px', borderBottom: '1px solid #ccc', paddingBottom: '8px', marginBottom: '16px' }}>Allotment Details</h4>
+                            <table style={{ width: '100%', fontSize: '14px', lineHeight: '2' }}>
+                                <tbody>
+                                    <tr><td style={{ width: '30%' }}><strong>Block Number:</strong></td><td>Block {allotment.block}</td></tr>
+                                    <tr><td><strong>Room Number:</strong></td><td>{allotment.roomNumber} (Floor {allotment.floor})</td></tr>
+                                    <tr><td><strong>Room Type:</strong></td><td>{allotment.roomType}</td></tr>
+                                    <tr><td><strong>Allotment Round:</strong></td><td>Round {allotment.round}</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div style={{ marginBottom: '40px' }}>
+                            <h4 style={{ fontSize: '16px', borderBottom: '1px solid #ccc', paddingBottom: '8px', marginBottom: '16px' }}>Fee Breakdown</h4>
+                            <table style={{ width: '100%', fontSize: '14px', borderCollapse: 'collapse' }}>
+                                <tbody>
+                                    <tr>
+                                        <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc' }}>Annual Hostel Facilities Fee</td>
+                                        <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc', textAlign: 'right' }}>₹{fees.facilitiesFee.toLocaleString()}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc' }}>AC Electricity Advance</td>
+                                        <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc', textAlign: 'right' }}>₹{fees.acElectricityAdvance.toLocaleString()}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc' }}>Hostel Deposit (Refundable)</td>
+                                        <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc', textAlign: 'right' }}>₹{fees.hostelDeposit.toLocaleString()}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc' }}>Mess Advance</td>
+                                        <td style={{ padding: '8px 0', borderBottom: '1px dotted #ccc', textAlign: 'right' }}>₹{fees.messAdvance.toLocaleString()}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{ padding: '12px 0', borderBottom: '2px solid #000', fontWeight: 'bold' }}>Total Amount Payable</td>
+                                        <td style={{ padding: '12px 0', borderBottom: '2px solid #000', textAlign: 'right', fontWeight: 'bold', fontSize: '16px' }}>₹{fees.totalAmount.toLocaleString()}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div style={{ fontSize: '12px', color: '#555', lineHeight: '1.6', marginTop: '50px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
+                            <p><strong>Remarks:</strong></p>
+                            <ol style={{ paddingLeft: '20px' }}>
+                                <li>This admission order is provisional and subject to successful payment of the Total Amount Payable within 7 working days.</li>
+                                <li>In case of cancellation or no-show, the Hostel Deposit and Mess Advance will be refunded within 30 days as per university policy.</li>
+                                <li>The allotted room is strictly non-transferable.</li>
+                                <li>Please bring a printed copy of this Admission Order along with your Student ID card at the time of hostel check-in.</li>
+                            </ol>
+                        </div>
+                        
+                        <div style={{ marginTop: '80px', display: 'flex', justifyContent: 'space-between' }}>
+                            <div style={{ textAlign: 'center', borderTop: '1px solid #000', paddingTop: '8px', width: '200px' }}>Student Signature</div>
+                            <div style={{ textAlign: 'center', borderTop: '1px solid #000', paddingTop: '8px', width: '200px' }}>Chief Warden Signature</div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            {/* Inject html2pdf.js dynamically from CDN */}
+            <Script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" strategy="lazyOnload" />
         </div>
     );
 }
