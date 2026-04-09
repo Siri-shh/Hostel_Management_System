@@ -7,153 +7,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Gender {
-  MALE
-  FEMALE
-}
-
-enum AllotmentStatus {
-  ALLOTTED
-  WAITLISTED
-  OFF_CAMPUS
-  DISALLOWED
-}
-
-enum SessionStatus {
-  DRAFT
-  ROUND1_DONE
-  ROUND1_LOCKED
-  ROUND2_DONE
-}
-
-model Block {
-  id            Int      @id @default(autoincrement())
-  number        Int      @unique
-  gender        Gender
-  floors        Int      @default(8)
-  roomsPerFloor Int      @default(30)
-
-  rooms         Room[]
-  roomConfigs   BlockRoomConfig[]
-  pref1Groups   StudentGroup[]     @relation("Pref1Block")
-  pref2Groups   StudentGroup[]     @relation("Pref2Block")
-
-  @@map("blocks")
-}
-
-model RoomType {
-  id       Int    @id @default(autoincrement())
-  code     String @unique
-  name     String
-  capacity Int
-
-  rooms       Room[]
-  roomConfigs BlockRoomConfig[]
-  pref1Groups StudentGroup[]     @relation("Pref1RoomType")
-  pref2Groups StudentGroup[]     @relation("Pref2RoomType")
-
-  @@map("room_types")
-}
-
-model BlockRoomConfig {
-  id            Int      @id @default(autoincrement())
-  blockId       Int
-  roomTypeId    Int
-  roomsPerFloor Int
-
-  block    Block    @relation(fields: [blockId], references: [id])
-  roomType RoomType @relation(fields: [roomTypeId], references: [id])
-
-  @@unique([blockId, roomTypeId])
-  @@map("block_room_configs")
-}
-
-model Room {
-  id           Int    @id @default(autoincrement())
-  blockId      Int
-  roomTypeId   Int
-  floor        Int
-  roomNumber   String
-  occupiedBeds Int    @default(0)
-
-  block      Block       @relation(fields: [blockId], references: [id])
-  roomType   RoomType    @relation(fields: [roomTypeId], references: [id])
-  allotments Allotment[]
-
-  @@unique([blockId, roomNumber])
-  @@map("rooms")
-}
-
 model AllotmentSession {
-  id        Int           @id @default(autoincrement())
-  name      String
-  status    SessionStatus @default(DRAFT)
-  algoMode  String        @default("preference_only")
-  createdAt DateTime      @default(now())
-
-  students  Student[]
-  groups    StudentGroup[]
-  allotments Allotment[]
+  id                   Int           @id @default(autoincrement())
+  name                 String
+  status               SessionStatus @default(DRAFT)
+  createdAt            DateTime      @default(now())
+  algoMode             String        @default("preference_only")
+  portalStatus         PortalStatus  @default(CLOSED)
+  blockCutoffsEnabled  Boolean       @default(false)
+  maxCgpaDiffEnabled   Boolean       @default(false)
+  maxCgpaDiff          Float?
+  allotments           Allotment[]
+  blockCutoffs         BlockCutoff[]
+  portalGroups         PortalGroup[]
+  studentGroups        StudentGroup[]
+  students             Student[]
 
   @@map("allotment_sessions")
-}
-
-model Student {
-  id         Int    @id @default(autoincrement())
-  regNo      String
-  name       String
-  gender     Gender
-  year       Int
-  department String
-  cgpa       Float
-  sessionId  Int
-
-  // Store raw preferences from CSV so allotment can work even without groups
-  pref1BlockNum     Int?
-  pref1RoomTypeCode String?
-  pref2BlockNum     Int?
-  pref2RoomTypeCode String?
-
-  session    AllotmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  groupMemberships GroupMember[]
-  allotments       Allotment[]
-
-  @@unique([regNo, sessionId])
-  @@map("students")
-}
-
-model StudentGroup {
-  id             Int    @id @default(autoincrement())
-  avgCgpa        Float
-  size           Int
-  pref1BlockId   Int
-  pref1RoomTypeId Int
-  pref2BlockId   Int
-  pref2RoomTypeId Int
-  sessionId      Int
-
-  pref1Block    Block            @relation("Pref1Block", fields: [pref1BlockId], references: [id])
-  pref1RoomType RoomType         @relation("Pref1RoomType", fields: [pref1RoomTypeId], references: [id])
-  pref2Block    Block            @relation("Pref2Block", fields: [pref2BlockId], references: [id])
-  pref2RoomType RoomType         @relation("Pref2RoomType", fields: [pref2RoomTypeId], references: [id])
-  session       AllotmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-
-  members    GroupMember[]
-  allotments Allotment[]
-
-  @@map("student_groups")
-}
-
-model GroupMember {
-  id        Int @id @default(autoincrement())
-  groupId   Int
-  studentId Int
-
-  group   StudentGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  student Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@unique([groupId, studentId])
-  @@map("group_members")
 }
 
 model Allotment {
@@ -164,12 +34,211 @@ model Allotment {
   round     Int
   status    AllotmentStatus
   sessionId Int
-
-  student Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  room    Room?            @relation(fields: [roomId], references: [id])
-  group   StudentGroup     @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  session AllotmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  group     StudentGroup    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  room      Room?           @relation(fields: [roomId], references: [id])
+  session   AllotmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  student   Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, sessionId, round])
   @@map("allotments")
+}
+
+model BlockRoomConfig {
+  id            Int      @id @default(autoincrement())
+  blockId       Int
+  roomTypeId    Int
+  roomsPerFloor Int
+  block         Block    @relation(fields: [blockId], references: [id])
+  roomType      RoomType @relation(fields: [roomTypeId], references: [id])
+
+  @@unique([blockId, roomTypeId])
+  @@map("block_room_configs")
+}
+
+model Block {
+  id                 Int              @id @default(autoincrement())
+  number             Int              @unique
+  gender             Gender
+  floors             Int              @default(8)
+  roomsPerFloor      Int              @default(30)
+  blockCutoffs       BlockCutoff[]
+  roomConfigs        BlockRoomConfig[]
+  pref1PortalGroups  PortalGroup[]    @relation("PortalGroupPref1Block")
+  pref2PortalGroups  PortalGroup[]    @relation("PortalGroupPref2Block")
+  rooms              Room[]
+  pref1StudentGroups StudentGroup[]   @relation("StudentGroupPref1Block")
+  pref2StudentGroups StudentGroup[]   @relation("StudentGroupPref2Block")
+
+  @@map("blocks")
+}
+
+model BlockCutoff {
+  id        Int              @id @default(autoincrement())
+  sessionId Int
+  blockId   Int
+  minCgpa   Float
+  session   AllotmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  block     Block            @relation(fields: [blockId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, blockId])
+  @@map("block_cutoffs")
+}
+
+model GroupMember {
+  id        Int          @id @default(autoincrement())
+  groupId   Int
+  studentId Int
+  group     StudentGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  student   Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, studentId])
+  @@map("group_members")
+}
+
+model PortalGroupMember {
+  id            Int         @id @default(autoincrement())
+  portalGroupId Int
+  studentId     Int
+  portalGroup   PortalGroup @relation(fields: [portalGroupId], references: [id], onDelete: Cascade)
+  student       Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, portalGroupId])
+  @@map("portal_group_members")
+}
+
+model PortalGroup {
+  id              Int                 @id @default(autoincrement())
+  sessionId       Int
+  inviteCode      String              @unique
+  leaderId        Int
+  pref1BlockId    Int?
+  pref1RoomTypeId Int?
+  pref2BlockId    Int?
+  pref2RoomTypeId Int?
+  isSubmitted     Boolean             @default(false)
+  createdAt       DateTime            @default(now())
+  members         PortalGroupMember[]
+  leader          Student             @relation(fields: [leaderId], references: [id], onDelete: Cascade)
+  pref1Block      Block?              @relation("PortalGroupPref1Block", fields: [pref1BlockId], references: [id])
+  pref1RoomType   RoomType?           @relation("PortalGroupPref1RoomType", fields: [pref1RoomTypeId], references: [id])
+  pref2Block      Block?              @relation("PortalGroupPref2Block", fields: [pref2BlockId], references: [id])
+  pref2RoomType   RoomType?           @relation("PortalGroupPref2RoomType", fields: [pref2RoomTypeId], references: [id])
+  session         AllotmentSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("portal_groups")
+}
+
+model RoomType {
+  id                 Int              @id @default(autoincrement())
+  code               String           @unique
+  name               String
+  capacity           Int
+  blockRoomConfigs   BlockRoomConfig[]
+  pref1PortalGroups  PortalGroup[]    @relation("PortalGroupPref1RoomType")
+  pref2PortalGroups  PortalGroup[]    @relation("PortalGroupPref2RoomType")
+  rooms              Room[]
+  pref1StudentGroups StudentGroup[]   @relation("StudentGroupPref1RoomType")
+  pref2StudentGroups StudentGroup[]   @relation("StudentGroupPref2RoomType")
+
+  @@map("room_types")
+}
+
+model Room {
+  id           Int        @id @default(autoincrement())
+  blockId      Int
+  roomTypeId   Int
+  floor        Int
+  roomNumber   String
+  occupiedBeds Int        @default(0)
+  allotments   Allotment[]
+  block        Block      @relation(fields: [blockId], references: [id])
+  roomType     RoomType   @relation(fields: [roomTypeId], references: [id])
+
+  @@unique([blockId, roomNumber])
+  @@map("rooms")
+}
+
+model StudentGroup {
+  id              Int              @id @default(autoincrement())
+  avgCgpa         Float
+  size            Int
+  pref1BlockId    Int
+  pref1RoomTypeId Int
+  pref2BlockId    Int
+  pref2RoomTypeId Int
+  sessionId       Int
+  allotments      Allotment[]
+  members         GroupMember[]
+  pref1Block      Block            @relation("StudentGroupPref1Block", fields: [pref1BlockId], references: [id])
+  pref1RoomType   RoomType         @relation("StudentGroupPref1RoomType", fields: [pref1RoomTypeId], references: [id])
+  pref2Block      Block            @relation("StudentGroupPref2Block", fields: [pref2BlockId], references: [id])
+  pref2RoomType   RoomType         @relation("StudentGroupPref2RoomType", fields: [pref2RoomTypeId], references: [id])
+  session         AllotmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("student_groups")
+}
+
+model Student {
+  id                     Int                 @id @default(autoincrement())
+  regNo                  String
+  name                   String
+  gender                 Gender
+  year                   Int
+  department             String
+  cgpa                   Float
+  sessionId              Int
+  pref1BlockNum          Int?
+  pref1RoomTypeCode      String?
+  pref2BlockNum          Int?
+  pref2RoomTypeCode      String?
+  password               String?
+  source                 StudentSource       @default(CSV)
+  allotments      Allotment[]
+  groupMemberships GroupMember[]
+  portalMemberships PortalGroupMember[]
+  ledPortalGroups  PortalGroup[]
+  session          AllotmentSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([regNo, sessionId])
+  @@map("students")
+}
+
+model AllotmentAudit {
+  id        Int      @id @default(autoincrement())
+  studentId Int
+  oldStatus String
+  newStatus String
+  changedAt DateTime @default(now())
+
+  @@map("allotment_audits")
+}
+
+enum AllotmentStatus {
+  ALLOTTED
+  WAITLISTED
+  OFF_CAMPUS
+  DISALLOWED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum PortalStatus {
+  CLOSED
+  OPEN
+  LOCKED
+}
+
+enum SessionStatus {
+  DRAFT
+  ROUND1_DONE
+  ROUND2_DONE
+  ROUND1_LOCKED
+}
+
+enum StudentSource {
+  CSV
+  PORTAL
 }

@@ -13,13 +13,10 @@ export async function PATCH(request, { params }) {
             return NextResponse.json({ error: 'Invalid allotment ID' }, { status: 400 });
         }
 
-        // Find the target allotment to get its groupId
+        // Lean fetch — only grab what we actually need for validation + update
         const allotment = await prisma.allotment.findUnique({
             where: { id: allotmentId },
-            include: {
-                group: { include: { members: { include: { student: true } } } },
-                student: true,
-            },
+            select: { id: true, groupId: true, sessionId: true, status: true },
         });
 
         if (!allotment) return NextResponse.json({ error: 'Allotment not found' }, { status: 404 });
@@ -27,25 +24,31 @@ export async function PATCH(request, { params }) {
             return NextResponse.json({ error: `Cannot disallow — current status is ${allotment.status}` }, { status: 400 });
         }
 
-        const sessionId = allotment.sessionId;
-
-        // Check session is in ROUND1_DONE state (not yet locked)
-        const session = await prisma.allotmentSession.findUnique({ where: { id: sessionId } });
-        if (session.status !== 'ROUND1_DONE') {
+        // Check session is in ROUND1_DONE state
+        const session = await prisma.allotmentSession.findUnique({
+            where: { id: allotment.sessionId },
+            select: { status: true },
+        });
+        if (session?.status !== 'ROUND1_DONE') {
             return NextResponse.json({ error: 'Can only disallow during the Round 1 verification phase.' }, { status: 400 });
         }
 
-        // Mark ALL allotments in this group as DISALLOWED (they applied together, so they go together)
+        // Disallow all allotments in this group in a single updateMany
         const result = await prisma.allotment.updateMany({
             where: {
                 groupId: allotment.groupId,
-                sessionId,
+                sessionId: allotment.sessionId,
                 status: 'ALLOTTED',
             },
             data: { status: 'DISALLOWED', roomId: null },
         });
 
-        const disallowedNames = allotment.group.members.map(m => m.student.name).join(', ');
+        // Fetch student names separately for the response message (lean select)
+        const members = await prisma.groupMember.findMany({
+            where: { groupId: allotment.groupId },
+            select: { student: { select: { name: true } } },
+        });
+        const disallowedNames = members.map(m => m.student.name).join(', ');
 
         return NextResponse.json({
             message: `Disallowed ${result.count} allotment(s) for group: ${disallowedNames}`,

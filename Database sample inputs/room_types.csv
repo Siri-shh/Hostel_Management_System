@@ -1,0 +1,8 @@
+"id","code","name","capacity"
+"1","SA","Single Attached Non-AC","1"
+"2","SAC","Single Attached AC","1"
+"3","SC","Single Non-Attached Non-AC","1"
+"4","DA","Double Attached Non-AC","2"
+"5","DAC","Double Attached AC","2"
+"6","DC","Double Non-Attached Non-AC","2"
+"7","QAC","Quadruple Attached AC","4"

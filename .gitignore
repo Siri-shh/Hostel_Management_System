@@ -37,6 +37,25 @@ yarn-error.log*
 next-env.d.ts
 
 
+# project-specific non-source files
 SYNOPSIS.md
 SYNOPSIS.txt
 synthetic_data_prompt.txt
+/test data csv outputs
+
+# one-off debug & test scripts in root
+check-prisma.mjs
+test-api.js
+
+# dev/maintenance scripts (generated during development)
+/scripts/*
+!/scripts/setup-db-extensions.js
+
+# Data and CSV uploads
+/Database smaple inputs/
+/Database sample inputs/
+/Synthetic Data/
+sample_data.csv
+
+# Project reports (binaries/pdfs)
+DBS LAB REPORT.*

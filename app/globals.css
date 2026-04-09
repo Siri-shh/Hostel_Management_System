@@ -1,58 +1,59 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Color Palette — Deep Navy + Vibrant Accents */
-  --bg-primary: #0a0e1a;
-  --bg-secondary: #111827;
-  --bg-card: #1a2235;
-  --bg-card-hover: #1f2a40;
-  --bg-sidebar: #0d1221;
-  --bg-input: #1a2235;
-  --bg-overlay: rgba(10, 14, 26, 0.85);
+  /* Color Palette — Deep Space + Vibrant Cyber Accents */
+  --bg-primary: #05050A;
+  --bg-secondary: #0A0A12;
+  --bg-card: rgba(16, 18, 27, 0.6);
+  --bg-card-hover: rgba(22, 25, 43, 0.75);
+  --bg-sidebar: rgba(10, 10, 18, 0.85);
+  --bg-input: rgba(18, 20, 32, 0.7);
+  --bg-overlay: rgba(5, 5, 10, 0.9);
 
-  --border-color: #2a3550;
-  --border-light: #1e293b;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-light: rgba(255, 255, 255, 0.04);
 
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --text-heading: #e2e8f0;
+  --text-primary: #FFFFFF;
+  --text-secondary: #A0A0AB;
+  --text-muted: #6B6B76;
+  --text-heading: #F8F8FF;
 
-  --accent-primary: #6366f1;
-  --accent-primary-hover: #818cf8;
-  --accent-primary-bg: rgba(99, 102, 241, 0.12);
+  --accent-primary: #7C3AED;
+  --accent-primary-hover: #9D4EDD;
+  --accent-primary-bg: rgba(124, 58, 237, 0.15);
 
-  --accent-success: #22c55e;
-  --accent-success-bg: rgba(34, 197, 94, 0.12);
+  --accent-success: #10B981;
+  --accent-success-bg: rgba(16, 185, 129, 0.15);
 
-  --accent-warning: #f59e0b;
-  --accent-warning-bg: rgba(245, 158, 11, 0.12);
+  --accent-warning: #F59E0B;
+  --accent-warning-bg: rgba(245, 158, 11, 0.15);
 
-  --accent-danger: #ef4444;
-  --accent-danger-bg: rgba(239, 68, 68, 0.12);
+  --accent-danger: #EF4444;
+  --accent-danger-bg: rgba(239, 68, 68, 0.15);
 
-  --accent-info: #06b6d4;
-  --accent-info-bg: rgba(6, 182, 212, 0.12);
+  --accent-info: #0EA5E9;
+  --accent-info-bg: rgba(14, 165, 233, 0.15);
 
   /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  --gradient-success: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-  --gradient-card: linear-gradient(145deg, #1a2235 0%, #111827 100%);
+  --gradient-primary: linear-gradient(135deg, #4F46E5 0%, #E11D48 100%);
+  --gradient-success: linear-gradient(135deg, #059669 0%, #10B981 100%);
+  --gradient-card: linear-gradient(145deg, rgba(25, 28, 43, 0.4) 0%, rgba(12, 14, 22, 0.2) 100%);
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.15);
+  --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 24px rgba(124, 58, 237, 0.25);
 
   /* Spacing */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
 
   /* Typography */
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family: 'Plus Jakarta Sans', sans-serif;
+  --font-heading: 'Outfit', sans-serif;
 }
 
 * {
@@ -109,11 +110,11 @@ a:hover {
 .btn-primary {
   background: var(--gradient-primary);
   color: white;
-  box-shadow: var(--shadow-sm), 0 0 14px rgba(99, 102, 241, 0.2);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 .btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md), 0 0 20px rgba(99, 102, 241, 0.35);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 20px rgba(225, 29, 72, 0.35);
 }
 
 .btn-success {
@@ -163,16 +164,19 @@ a:hover {
 
 /* ===== CARDS ===== */
 .card {
-  background: var(--gradient-card);
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 24px;
-  transition: all 0.25s ease;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card:hover {
-  border-color: rgba(99, 102, 241, 0.3);
+  border-color: rgba(255, 255, 255, 0.15);
   box-shadow: var(--shadow-glow);
+  background: var(--bg-card-hover);
 }
 
 .card-header {
@@ -183,21 +187,24 @@ a:hover {
 }
 
 .card-title {
-  font-size: 16px;
+  font-family: var(--font-heading);
+  font-size: 18px;
   font-weight: 700;
   color: var(--text-heading);
 }
 
 /* ===== STAT CARDS ===== */
 .stat-card {
-  background: var(--gradient-card);
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 20px 24px;
   display: flex;
   align-items: center;
   gap: 16px;
-  transition: all 0.25s ease;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .stat-card:hover {
@@ -386,7 +393,8 @@ tbody tr:hover {
 }
 
 .page-header h1 {
-  font-size: 28px;
+  font-family: var(--font-heading);
+  font-size: 32px;
   font-weight: 800;
   color: var(--text-heading);
   letter-spacing: -0.02em;
