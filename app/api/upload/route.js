@@ -64,10 +64,11 @@ export async function POST(request) {
         });
         const studentByReg = Object.fromEntries(createdStudents.map(s => [s.regNo, s]));
 
-        // --- Create groups ---
-        let groupCount = 0;
+        // --- Create groups (batch insert for speed) ---
         let groupSkipped = 0;
         const allGroupMemberData = [];
+        const validGroupData = [];   // rows to insert
+        const validGroupMeta = [];   // parallel array: leader regNo + members per group
 
         console.log(`[Upload] Total groups from validation: ${validation.groups.length}`);
 
@@ -79,7 +80,6 @@ export async function POST(request) {
             const pref2RT = rtMap[leader.pref2RoomType];
 
             if (!pref1Block || !pref1RT || !pref2Block || !pref2RT) {
-                // Log the failure for debugging
                 if (groupSkipped < 5) {
                     console.warn(`[Upload] Skipping group (leader: ${leader.regNo}): ` +
                         `pref1Block=${leader.pref1Block}→${pref1Block ? 'OK' : 'MISSING'}, ` +
@@ -91,32 +91,45 @@ export async function POST(request) {
                 continue;
             }
 
-            const studentGroup = await prisma.studentGroup.create({
-                data: {
-                    avgCgpa: group.avgCgpa,
-                    size: group.size,
-                    pref1BlockId: pref1Block.id,
-                    pref1RoomTypeId: pref1RT.id,
-                    pref2BlockId: pref2Block.id,
-                    pref2RoomTypeId: pref2RT.id,
-                    sessionId: session.id,
-                },
+            validGroupData.push({
+                avgCgpa: group.avgCgpa,
+                size: group.size,
+                pref1BlockId: pref1Block.id,
+                pref1RoomTypeId: pref1RT.id,
+                pref2BlockId: pref2Block.id,
+                pref2RoomTypeId: pref2RT.id,
+                sessionId: session.id,
             });
+            validGroupMeta.push({ leaderRegNo: String(leader.regNo), members: group.members });
+        }
 
-            for (const member of group.members) {
-                // IMPORTANT: Cast to String in case CSV parser returned a number type
+        // Single batch insert for all groups — vastly faster than one-by-one
+        if (validGroupData.length > 0) {
+            await prisma.studentGroup.createMany({ data: validGroupData });
+        }
+
+        // Re-fetch created groups to get their DB IDs (createMany doesn't return them)
+        const createdGroups = await prisma.studentGroup.findMany({
+            where: { sessionId: session.id },
+            select: { id: true, avgCgpa: true, size: true, pref1BlockId: true },
+            orderBy: { id: 'asc' },
+        });
+
+        // Match by insertion order (same order as validGroupData)
+        for (let i = 0; i < createdGroups.length; i++) {
+            const groupId = createdGroups[i].id;
+            const meta = validGroupMeta[i];
+            for (const member of meta.members) {
                 const dbStudent = studentByReg[String(member.regNo)];
                 if (dbStudent) {
-                    allGroupMemberData.push({
-                        groupId: studentGroup.id,
-                        studentId: dbStudent.id,
-                    });
+                    allGroupMemberData.push({ groupId, studentId: dbStudent.id });
                 } else {
                     console.error(`[Upload] CRITICAL: No DB student found for regNo "${member.regNo}" (type: ${typeof member.regNo})`);
                 }
             }
-            groupCount++;
         }
+
+        const groupCount = createdGroups.length;
 
         if (groupSkipped > 0) {
             console.warn(`[Upload] WARNING: ${groupSkipped} groups skipped due to failed block/RT lookups!`);

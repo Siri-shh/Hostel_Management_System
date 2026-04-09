@@ -7,7 +7,8 @@ import prisma from '@/lib/prisma';
 // Other individuals sharing the same physical room (from different groups) are unaffected.
 export async function PATCH(request, { params }) {
     try {
-        const allotmentId = parseInt(params.allotmentId);
+        const { allotmentId: allotmentIdStr } = await params;
+        const allotmentId = parseInt(allotmentIdStr);
         if (isNaN(allotmentId)) {
             return NextResponse.json({ error: 'Invalid allotment ID' }, { status: 400 });
         }

@@ -6,7 +6,8 @@ import prisma from '@/lib/prisma';
 // Once locked, Round 2 becomes available and no more disallowals are permitted.
 export async function PATCH(request, { params }) {
     try {
-        const sessionId = parseInt(params.sessionId);
+        const { sessionId: sessionIdStr } = await params;
+        const sessionId = parseInt(sessionIdStr);
         if (isNaN(sessionId)) return NextResponse.json({ error: 'Invalid session ID' }, { status: 400 });
 
         const session = await prisma.allotmentSession.findUnique({ where: { id: sessionId } });
